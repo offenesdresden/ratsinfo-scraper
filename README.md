@@ -8,7 +8,7 @@ INSTALLATION
 
 0. Get the code
 
-   $ git clone git@github.com:Mic92/ratsinfo-scraper.git
+   $ git clone https://github.com/Mic92/ratsinfo-scraper.git
 
 1. Get ruby
 
@@ -21,6 +21,7 @@ INSTALLATION
 3. Install Dependencies
 
    $ cd ratsinfo
+   
    $ bundle install
 
 
