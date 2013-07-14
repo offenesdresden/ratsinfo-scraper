@@ -122,7 +122,10 @@ module Scrape
       date = second_row[1].text
       (start_time, end_time) = second_row[3].text.split("-")
       started_at = Time.parse(date + " " + start_time + " CEST")
-      ended_at = Time.parse(date + " " + end_time + " CEST" )
+      ended_at = nil
+      unless end_time.nil? # end time can be omitted
+        ended_at = Time.parse(date + " " + end_time + " CEST" )
+      end
 
       third_row = rows[2].css("td")
       if third_row[0].text.include?("Bezeichnung:") # location row is missing

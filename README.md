@@ -6,34 +6,40 @@ Scrape documents with associated metadata from http://ratsinfo.dresden.de
 INSTALLATION
 ------------
 
-0. Get the code
+Get the code
 
-   $ git clone https://github.com/Mic92/ratsinfo-scraper.git
+    git clone https://github.com/Mic92/ratsinfo-scraper.git
 
-1. Get ruby
+Get ruby
 
-   $ \curl -L https://get.rvm.io | bash -s stable
+    \curl -L https://get.rvm.io | bash -s stable
 
-2. Install bundler
+Install bundler
 
-   $ gem install bundler
+    gem install bundler
 
-3. Install Dependencies
+Install Dependencies
 
-   $ cd ratsinfo
-   
-   $ bundle install
-
+    cd ratsinfo
+    bundle install
 
 USAGE
 -----
 
 To start scraping use:
 
-   $ rake scrape
+    rake scrape
 
 This will extract all documents to the path of the environment variable DOWNLOAD_PATH (defaults
 to "data").
+
+To scrape an individual session for example: [http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100](http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100)
+
+    rake scrape_session[100]
+
+To display all tasks use:
+
+    rake -T
 
 The download directory will have the following scheme:
 
@@ -50,7 +56,7 @@ for strings or empty array, required values should be always available)
 - description: (required) the long name of the session, ex "3. Sitzung des Stadtrates"
 - committee: (required) the board, holding the session, ex "Stadtrat"
 - started_at: (required) the time when the session started (converted from CEST time), ex "2009-10-01T14:00:00Z"
-- ended_at: (required) the time when the session ended (converted from CEST time), ex "2009-10-01T18:30:00Z"
+- ended_at: (optional) the time when the session ended (converted from CEST time), ex "2009-10-01T18:30:00Z"
 - location: (optional) the location where the session took place, ex "Landeshauptstadt Dresden,  im Neuen Rathaus, Plenarsaal,Rathausplatz 1, 01067 Dresden"
 - download_at: (required) the time when the archive was downloaded
 - documents: documents associated with the session (excluding those associated
@@ -71,7 +77,7 @@ for strings or empty array, required values should be always available)
 TODO
 ----
 
-- [] continue, where the last scan stopped
-- [] templates for custom tasks
-- [] clean up task
-- [] some kind of tests
+- continue, where the last scan stopped
+- templates for custom tasks
+- clean up task
+- some kind of tests
