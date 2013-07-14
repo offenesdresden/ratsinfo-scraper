@@ -103,7 +103,7 @@ for strings or empty array, required values should be always available)
 </tr>
 <tr>
 <th>parts</th>
-<td>(optional) each session can be contains an array of parts.
+<td>(optional) each session can contain an array of parts.
     a part is an object containing the following keys:
   <table>
   <tr>
