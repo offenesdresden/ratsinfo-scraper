@@ -52,3 +52,5 @@ desc "Scrape Documents of Session with session_id"
 task :scrape_session, :session_id do |t, args|
   scrape_session(args.session_id)
 end
+
+task :default => [:scrape]
