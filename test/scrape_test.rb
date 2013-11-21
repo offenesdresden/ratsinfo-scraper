@@ -27,7 +27,6 @@ describe "scrape session" do
   end
   it "should download the archive" do
     @zip_file.size.must_be :>, 1E5
-    binding.pry
   end
   after do
     FileUtils.remove_entry @session_path
