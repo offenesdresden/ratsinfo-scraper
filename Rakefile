@@ -1,38 +1,17 @@
-require './lib/scrape'
-require 'tempfile'
+require_relative 'lib/scrape'
+require_relative 'lib/pdf_parser'
+require 'rake/testtask'
+
 require 'json'
+require 'pry'
 
 CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
 SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
-def scrape_session(session_id)
-  session_path = File.join(DOWNLOAD_PATH, session_id)
-  if Dir.exists?(session_path)
-    puts("#skip #{session_id}")
-    return
-  end
-  mkdir(session_path)
+METADATA_FILES = FileList["./data/**/metadata.json"]
 
-  begin
-    session_url = sprintf(SESSION_URI, session_id)
-    tmp_file = Scrape.download_zip_archive(session_url)
-
-    archive = Scrape::DocumentArchive.new(tmp_file.path)
-    archive.extract(session_path)
-
-    metadata_path = File.join(session_path, "metadata.json")
-    metadata_file = open(metadata_path, "w+")
-    metadata = archive.metadata
-    metadata[:session_url] = session_url
-    json = JSON.pretty_generate(metadata)
-    metadata_file.write(json)
-    tmp_file.unlink
-  rescue Exception => e
-    puts e.message
-    puts e.backtrace
-    rm_r session_path
-  end
+def convert_documents_to_text(source_directory, metadata)
 end
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
@@ -43,14 +22,48 @@ task :scrape do
     uri = sprintf(CALENDAR_URI, date.year, date.month)
     s = Scrape::ConferenceCalendarScraper.new(uri)
     s.each do |session_id|
-      scrape_session(session_id)
+      session_path = File.join(DOWNLOAD_PATH, session_id)
+      if Dir.exists?(session_path)
+        puts("#skip #{session_id}")
+        return
+      end
+      mkdir(session_path)
+      session_url = sprintf(SESSION_URI, session_id)
+      Scrape.scrape_session(session_url, session_path)
     end
   end
 end
 
 desc "Scrape Documents of Session with session_id"
 task :scrape_session, :session_id do |t, args|
-  scrape_session(args.session_id)
+  session_path = File.join(DOWNLOAD_PATH, args.session_id)
+  session_url = sprintf(SESSION_URI, session_id)
+  Scrape.scrape_session(session_url, session_path)
 end
 
-task :default => [:scrape]
+task :default => [:scrape, :convert]
+
+desc "Convert existing scraped pdfs to plain text files"
+task :convert do
+  METADATA_FILES.each do |file_name|
+    directory = File.dirname(file_name)
+    metadata = Metadata.new(JSON.load(File.open(file_name)))
+    metadata.each_document do |doc|
+      pdf_path = File.join(directory, doc.file_name)
+      next unless pdf_path.end_with?(".pdf")
+
+      p = PdfParser.new(pdf_path)
+      p.write_pages
+      doc.pdf_metadata = p.metadata
+    end
+
+    file = File.open(file_name, "w")
+    json = JSON.pretty_generate(metadata)
+    file.write(json)
+  end
+end
+
+Rake::TestTask.new do |t|
+  t.libs << "test"
+  t.test_files = FileList['test/**/*_test.rb']
+end

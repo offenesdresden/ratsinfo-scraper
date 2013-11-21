@@ -10,9 +10,10 @@ Get the code
 
     git clone https://github.com/Mic92/ratsinfo-scraper.git
 
-Get ruby
+Get jruby
 
-    \curl -L https://get.rvm.io | bash -s stable
+    curl -L https://get.rvm.io | bash
+    rvm install jruby
 
 Install bundler
 
@@ -28,10 +29,9 @@ USAGE
 
 To start scraping use:
 
-    rake scrape
+    rake
 
-This will extract all documents to the path of the environment variable DOWNLOAD_PATH (defaults
-to "data").
+This will extract all documents to the path of the environment variable DOWNLOAD_PATH (defaults to "data") and convert it to plain text
 
 To scrape an individual session for example: [http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100](http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100)
 
@@ -45,9 +45,10 @@ The download directory will have the following scheme:
 
 - each session have a directory, where the id is the directory name
 - every document belonging to this session will be extracted to this directory
-- additionally a file called metadata.json is created, which contains a
-  machine-readable version of the index.htm file, which is contained in the
-  document archives
+- if the document is an pdf, it try to convert it to text using the
+  [pdf-reader](https://github.com/yob/pdf-reader) gem
+- additionally a file called metadata.json is created. This is a machine-readable
+  version of the index.htm file, which is contained in the document archives
 
 The metadata.json file follow this structure. (optional means null-values
 for strings or empty array, required values should be always available)

@@ -3,10 +3,11 @@ require 'nokogiri'
 require 'open-uri'
 require 'cgi'
 require 'mechanize'
-require 'zip/zip'
-require 'date'
-
 require 'pry'
+require 'zip'
+require 'date'
+require 'tempfile'
+require_relative 'metadata.rb'
 
 module Scrape
   # Base for all exception
@@ -65,14 +66,46 @@ module Scrape
     agent.pluggable_parser.default = Mechanize::Download
     agent.get(link["href"]).save!(archive.path)
 
-    return archive
+    archive
+  end
+
+  def self.scrape_session(session_url, session_path)
+    begin
+      tmp_file = Scrape.download_zip_archive(session_url)
+
+      archive = Scrape::DocumentArchive.new(tmp_file.path)
+      archive.extract(session_path)
+      metadata = archive.metadata
+      metadata.session_url = session_url
+
+      metadata.each_document do |doc|
+        pdf_path = File.join(session_path, doc.file_name)
+        next unless pdf_path.end_with?(".pdf")
+
+        p = PdfParser.new(pdf_path)
+        p.write_pages
+        doc.pdf_metadata = p.metadata
+      end
+      json = JSON.pretty_generate(metadata)
+
+      metadata_path = File.join(session_path, "metadata.json")
+      metadata_file = open(metadata_path, "w+")
+      metadata_file.write(json)
+    rescue SignalException => e
+      raise e
+    rescue Exception => e
+      puts e.message
+      puts e.backtrace
+      rm_r session_path
+    ensure
+      tmp_file.unlink if tmp_file
+    end
   end
 
   class DocumentArchive
     def initialize(file_path)
-      @zip_file = Zip::ZipFile.open(file_path)
+      @zip_file = Zip::File.open(file_path)
       @metadata = parse_metadata(index_file)
-      @metadata[:downloaded_at] = Time.now
     end
 
     attr_reader :metadata
@@ -81,10 +114,6 @@ module Scrape
       @zip_file.entries.each do |entry|
         entry.extract(File.join(path, entry.name))
       end
-    end
-
-    def as_json
-      @metadata.clone
     end
 
     private
@@ -101,16 +130,19 @@ module Scrape
     def parse_metadata(index_file)
       doc = Nokogiri::HTML(index_file)
       desc_rows = doc.css("table#smctablevorgang tbody tr")
-      content_rows = doc.css("table#smc_page_to0040_contenttable1 tbody tr.smcrow1")
+      content_rows = doc.css("table#smc_page_to0040_contenttable1 tbody tr")
       document_links = doc.css("body > table.smcdocbox tbody a.smcdoccontrol1")
 
-      session = parse_session_description(desc_rows)
-      parts = parse_parts_rows(content_rows)
-      session[:parts] = parts
-      session[:documents] = document_links.map do |link|
-         { file_name: link["href"], description: link["title"].strip_whitespace }
+      metadata = parse_session_description(desc_rows)
+      metadata.parts = parse_parts_rows(content_rows)
+      metadata.documents = document_links.map do |link|
+        d = Document.new
+        d.file_name = link["href"]
+        d.description = link["title"].strip_whitespace
+        d
       end
-      session
+      metadata.downloaded_at = Time.now
+      metadata
     end
 
     def parse_session_description(rows)
@@ -136,21 +168,21 @@ module Scrape
         description = forth_row[1].text
       end
 
-      {
-        id: id,
-        description: description.strip_whitespace,
-        committee: committee.strip_whitespace,
-        started_at: started_at,
-        ended_at: ended_at,
-        location: location
-      }
+      m = Metadata.new
+      m.id = id
+      m.description = description.strip_whitespace
+      m.committee = committee.strip_whitespace
+      m.started_at = started_at
+      m.ended_at = ended_at
+      m.location = location
+      m
     end
 
     def parse_parts_rows(content_rows)
       grouped_rows = group_content_rows(content_rows)
 
       parts = grouped_rows.map do |rows|
-        first_row = rows[0].css("td")
+        first_row = rows[0]
         description = first_row[1].text.strip_whitespace
         template_id = first_row[2].text
         if template_id.empty?
@@ -161,9 +193,10 @@ module Scrape
         if document_table
           document_links = document_table.css("table tbody tr a")
           documents = document_links.map do |link|
-            title = link["title"].strip_whitespace
-            href = link["href"]
-            { description: title.strip_whitespace, file_name: href }
+            d = Document.new
+            d.description = link["title"].strip_whitespace
+            d.file_name = link["href"]
+            d
           end
         end
 
@@ -177,49 +210,49 @@ module Scrape
           vote_result =  parse_vote(cell.text)
         end
 
-        {
-          description: description,
-          template_id: template_id,
-          documents: documents,
-          decision: decision,
-          vote_result: vote_result
-        }
+        p = Part.new
+        p.description = description
+        p.template_id = template_id
+        p.documents = documents
+        p.decision = decision
+        p.vote_result = vote_result
+        p
       end
 
       parts
     end
+
     def group_content_rows(rows)
       groups = []
       i = -1
       rows.each do |row|
-        if row["id"] && row["id"].include?("smc_contol_to")
+        columns = row.children
+        # every new part begins with a new number in the first column
+        if columns[0].text.strip_whitespace != ""
           i += 1
           groups[i] = []
         end
-        groups[i] << row
+        groups[i] << columns
       end
       groups
     end
+
     def parse_vote(text)
-      result = {
-        pro: 0,
-        contra: 0,
-        abstention: 0
-      }
+      result = VoteResult.new
       text = text.strip_whitespace
       parts = text.split(", ")
       parts.each do |part|
         (type, number) = part.split(":")
         case type
         when "Ja"
-          result[:pro] = number
+          result.pro = number
         when "Nein"
-          result[:contra] = number
+          result.contra = number
         when "Enthaltung"
-          result[:abstention] = number
+          result.abstention = number
         end
       end
-      return result
+      result
     end
   end
 end
