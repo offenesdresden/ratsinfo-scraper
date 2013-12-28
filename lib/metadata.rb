@@ -77,4 +77,5 @@ class VoteResult < Hashie::Trash
   property :pro, default: 0
   property :contra, default: 0
   property :abstention, default: 0
+  property :prejudiced, default: 0
 end

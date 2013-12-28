@@ -96,7 +96,7 @@ module Scrape
     rescue Exception => e
       puts e.message
       puts e.backtrace
-      rm_r session_path
+      FileUtils.rm_rf(session_path)
     ensure
       tmp_file.unlink if tmp_file
     end
@@ -130,17 +130,12 @@ module Scrape
     def parse_metadata(index_file)
       doc = Nokogiri::HTML(index_file)
       desc_rows = doc.css("table#smctablevorgang tbody tr")
-      content_rows = doc.css("table#smc_page_to0040_contenttable1 tbody tr")
-      document_links = doc.css("body > table.smcdocbox tbody a.smcdoccontrol1")
+      content_rows = doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr")
+      document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
       metadata = parse_session_description(desc_rows)
-      metadata.parts = parse_parts_rows(content_rows)
-      metadata.documents = document_links.map do |link|
-        d = Document.new
-        d.file_name = link["href"]
-        d.description = link["title"].strip_whitespace
-        d
-      end
+      metadata.parts = parse_parts_rows(group_content_rows(content_rows))
+      metadata.documents = parse_documents_table(document_links)
       metadata.downloaded_at = Time.now
       metadata
     end
@@ -178,33 +173,26 @@ module Scrape
       m
     end
 
-    def parse_parts_rows(content_rows)
-      grouped_rows = group_content_rows(content_rows)
-
+    def parse_parts_rows(grouped_rows)
       parts = grouped_rows.map do |rows|
         first_row = rows[0]
+        first_row[1].css("br").each{ |br| br.replace "\n" }
         description = first_row[1].text.strip_whitespace
-        template_id = first_row[2].text
+        template_id = first_row[2].text.strip_whitespace
+
         if template_id.empty?
           template_id = nil
         end
+
         document_table = first_row[4]
-        documents = []
         if document_table
-          document_links = document_table.css("table tbody tr a")
-          documents = document_links.map do |link|
-            d = Document.new
-            d.description = link["title"].strip_whitespace
-            d.file_name = link["href"]
-            d
-          end
+          document_links = document_table.css("table tbody tr td:not(.smcdocname) a")
+          documents = parse_documents_table(document_links)
         end
 
-        decision = nil
         if rows[1]
           decision = rows[1].css("td")[2].text
         end
-        vote_result = nil
         if rows[2]
           cell = rows[2].css("td")[2]
           vote_result =  parse_vote(cell.text)
@@ -222,19 +210,35 @@ module Scrape
       parts
     end
 
+    def parse_documents_table(links)
+      links.map do |link|
+        d = Document.new
+        d.file_name = link["href"]
+        d.description = link["title"].strip_whitespace
+        d
+      end
+    end
+
     def group_content_rows(rows)
       groups = []
       i = -1
       rows.each do |row|
         columns = row.children
         # every new part begins with a new number in the first column
-        if columns[0].text.strip_whitespace != ""
+        if is_number?(columns[0].text)
           i += 1
           groups[i] = []
         end
-        groups[i] << columns
+        # skip garbage before our real parts begins
+        if i >= 0
+          groups[i] << columns
+        end
       end
       groups
+    end
+
+    def is_number?(i)
+      true if Float(i) rescue false
     end
 
     def parse_vote(text)
@@ -243,13 +247,16 @@ module Scrape
       parts = text.split(", ")
       parts.each do |part|
         (type, number) = part.split(":")
-        case type
+        number = Integer(number.strip_whitespace) rescue 0
+        case type.strip_whitespace
         when "Ja"
           result.pro = number
         when "Nein"
           result.contra = number
-        when "Enthaltung"
+        when "Enthaltungen"
           result.abstention = number
+        when "Befangen"
+          result.prejudiced = number
         end
       end
       result

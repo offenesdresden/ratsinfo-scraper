@@ -3,6 +3,8 @@ source "https://rubygems.org"
 group :test do
   gem "vcr", "~> 2.7"
   gem "webmock", "~> 1.16"
+  gem "pry-nav"
+  gem "pry-rescue"
 end
 
 gem "rubyzip", "~> 1.1"

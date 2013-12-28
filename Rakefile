@@ -11,11 +11,10 @@ DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data"
 
 METADATA_FILES = FileList["./data/**/metadata.json"]
 
-def convert_documents_to_text(source_directory, metadata)
-end
+directory 'data'
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape do
+task :scrape => 'data' do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
   date_range = (Date.new(2008, 01)..Time.now.to_date).select {|d| d.day == 1}
   date_range.each do |date|
@@ -27,7 +26,7 @@ task :scrape do
         puts("#skip #{session_id}")
         return
       end
-      mkdir(session_path)
+      mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
       Scrape.scrape_session(session_url, session_path)
     end

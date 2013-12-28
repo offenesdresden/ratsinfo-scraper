@@ -1,6 +1,7 @@
 require 'minitest/spec'
 require 'minitest/autorun'
 require 'webmock/minitest'
+require 'pry-rescue/minitest'
 require 'pry'
 require 'vcr'
 require 'pathname'
