@@ -14,7 +14,7 @@ class Metadata < Hashie::Trash
 
   def each_document(&block)
     documents.each &block
-    parts.each {|p| p.documents.each block }
+    parts.each {|p| p.documents.each &block }
   end
 end
 
