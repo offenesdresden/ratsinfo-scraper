@@ -24,7 +24,7 @@ task :scrape => :data do
       session_path = File.join(DOWNLOAD_PATH, session_id)
       if Dir.exists?(session_path)
         puts("#skip #{session_id}")
-	next
+        next
       end
       mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
@@ -36,6 +36,7 @@ end
 desc "Scrape Documents of Session with session_id"
 task :scrape_session, :session_id do |t, args|
   session_path = File.join(DOWNLOAD_PATH, args.session_id)
+  mkdir_p(session_path)
   session_url = sprintf(SESSION_URI, args.session_id)
   Scrape.scrape_session(session_url, session_path)
 end
