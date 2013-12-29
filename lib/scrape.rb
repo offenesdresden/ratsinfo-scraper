@@ -131,7 +131,7 @@ module Scrape
     def parse_metadata(index_file)
       doc = Nokogiri::HTML(index_file)
       desc_rows = doc.css("table#smctablevorgang tbody tr")
-      content_rows = doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr")
+      content_rows = doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]")
       document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
       metadata = parse_session_description(desc_rows)
