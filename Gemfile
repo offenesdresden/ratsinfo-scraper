@@ -5,6 +5,7 @@ group :test do
   gem "webmock", "~> 1.16"
   gem "pry-nav", "~> 0.2"
   gem "pry-rescue", "~> 1.2"
+  gem "rake", "~> 0.9"
 end
 
 gem "rubyzip", "~> 1.1"
