@@ -13,7 +13,7 @@ class Metadata < Hashie::Trash
   property :parts, with: Proc.new{ |ary| ary.map { |v| Part.new(v) } }
 
   def each_document(&block)
-    documents.each block
+    documents.each &block
     parts.each {|p| p.documents.each block }
   end
 end
@@ -26,6 +26,8 @@ class Document < Hashie::Trash
 end
 
 class PdfMetadata < Hashie::Trash
+  LatinToUtf8Converter = Encoding::Converter.new("ISO-8859-1", "utf-8")
+
   property :created_at, with: Proc.new { |v| Time.parse(v) }
   property :updated_at, with: Proc.new { |v| Time.parse(v) } # :modification_date
   property :author, with: Proc.new { |v| Time.parse(v) }
@@ -35,27 +37,28 @@ class PdfMetadata < Hashie::Trash
   property :pdf_title
   property :keywords
 
-  def self.from_pdf_reader(info)
+  def self.from_pdf_reader(reader)
+    info = reader.info
     new(
-      creation_at: parse_pdf_date(info[:CreationDate]),
-      modified_at: parse_pdf_date(info[:ModDate]),
+      created_at: parse_pdf_date(info[:CreationDate]),
+      updated_at: parse_pdf_date(info[:ModDate]),
       author: guess_encoding(info[:Author]),
       creator: guess_encoding(info[:Creator]),
       producer: guess_encoding(info[:Producer]),
-      page_count: @reader.page_count,
+      page_count: reader.page_count,
       pdf_title: guess_encoding(info[:Title] || info["Subject"]),
       keywords: guess_encoding(info[:Keywords])
     )
   end
 
   private
-  def parse_pdf_date(date)
+  def self.parse_pdf_date(date)
     return if date.nil?
     date = date.sub("D:", "").sub("'", "")
     Time.parse(date)
   end
 
-  def guess_encoding(str)
+  def self.guess_encoding(str)
     return unless str
     if Kconv.isutf8(str)
       str

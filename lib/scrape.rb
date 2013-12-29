@@ -8,6 +8,7 @@ require 'zip'
 require 'date'
 require 'tempfile'
 require_relative 'metadata.rb'
+require_relative 'pdf_reader.rb'
 
 module Scrape
   # Base for all exception
@@ -82,7 +83,7 @@ module Scrape
         pdf_path = File.join(session_path, doc.file_name)
         next unless pdf_path.end_with?(".pdf")
 
-        p = PdfParser.new(pdf_path)
+        p = PdfReader.new(pdf_path)
         p.write_pages
         doc.pdf_metadata = p.metadata
       end

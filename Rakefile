@@ -1,5 +1,5 @@
 require_relative 'lib/scrape'
-require_relative 'lib/pdf_parser'
+require_relative 'lib/pdf_reader'
 require 'rake/testtask'
 
 require 'json'
@@ -14,7 +14,7 @@ METADATA_FILES = FileList["./data/**/metadata.json"]
 directory 'data'
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape => 'data' do
+task :scrape => :data do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
   date_range = (Date.new(2008, 01)..Time.now.to_date).select {|d| d.day == 1}
   date_range.each do |date|
@@ -24,7 +24,7 @@ task :scrape => 'data' do
       session_path = File.join(DOWNLOAD_PATH, session_id)
       if Dir.exists?(session_path)
         puts("#skip #{session_id}")
-        return
+	next
       end
       mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
@@ -51,7 +51,7 @@ task :convert do
       pdf_path = File.join(directory, doc.file_name)
       next unless pdf_path.end_with?(".pdf")
 
-      p = PdfParser.new(pdf_path)
+      p = PdfReader.new(pdf_path)
       p.write_pages
       doc.pdf_metadata = p.metadata
     end
