@@ -10,10 +10,10 @@ Get the code
 
     git clone https://github.com/Mic92/ratsinfo-scraper.git
 
-Get jruby
+Get ruby (>= 2.0.0)
 
     curl -L https://get.rvm.io | bash
-    rvm install jruby
+    rvm install 2.1.0
 
 Install bundler
 
@@ -45,12 +45,12 @@ The download directory will have the following scheme:
 
 - each session have a directory, where the id is the directory name
 - every document belonging to this session will be extracted to this directory
-- if the document is an pdf, it try to convert it to text using the
-  [pdf-reader](https://github.com/yob/pdf-reader) gem
-- additionally a file called metadata.json is created. This is a machine-readable
+- if the document is an pdf, it try to extract each page into a plain text file using the
+  [pdf-reader](https://github.com/yob/pdf-reader) gem (00143511.pdf -> 00143511_0.txt, 00143511_1.txt, 00143511_2.txt)
+- additionally a JSON file is created, with the session id in its name. This is a machine-readable
   version of the index.htm file, which is contained in the document archives
 
-The metadata.json file follow this structure. (optional means null-values
+This JSON file follow this structure. (optional means null-values
 for strings or empty array, required values should be always available)
 
 <table>
@@ -103,60 +103,99 @@ for strings or empty array, required values should be always available)
   </td>
 </tr>
 <tr>
-<th>parts</th>
-<td>(optional) each session can contain an array of parts.
-    a part is an object containing the following keys:
-  <table>
-  <tr>
-    <th>description</th>
-    <td>(required) name of the part, ex "Beschlussvorlagen zu VOB-Vergaben"</td>
+  <th>parts</th>
+  <td>(optional) each session can contain an array of parts.
+      a part is an object containing the following keys:
+    <table>
+    <tr>
+      <th>description</th>
+      <td>(required) name of the part, ex "Beschlussvorlagen zu VOB-Vergaben"</td>
+    </tr>
+    <tr>
+      <th>template_id</th>
+      <td>(optional) some parts uses templates, further information here http://ratsinfo.dresden.de/vo0042.php</td>
+    </tr>
+    <tr>
+      <th>documents</th>
+      <td>
+      (optional) array of documents associated with this part
+        <table>
+          <tr>
+            <th>file_name</th>
+            <td>the file name as it is in the session directory, ex: "00003144.pdf"</td>
+          </tr>
+          <tr>
+            <th>description</th>
+            <td>name of the document, ex: "Vorlage Gremien"</td>
+          </tr>
+          <tr>
+            <th>pdf_metadata</th>
+            <td>
+              <table>
+                <tr>
+                  <th>created_at</th>
+                  <td>(required) PDF CreationDate</td>
+                </tr>
+                <tr>
+                  <th>updated_at</th>
+                  <td>(required) PDF ModDate</td>
+                </tr>
+                <tr>
+                  <th>author</th>
+                  <td>(optional) PDF Author, ex: "Sitzungsdienst 'Session'"</td>
+                </tr>
+                <tr>
+                  <th>producer</th>
+                  <td>(optional) PDF Producer, ex: "Acrobat Distiller 8.1.0 (Windows)"</td>
+                </tr>
+                <tr>
+                  <th>creator</th>
+                  <td>PDF Creator, ex: "Acrobat PDFMaker 8.1 für Word"</td>
+                </tr>
+                <tr>
+                  <th>page_count</th>
+                  <td>(required) Number of Pages</td>
+                </tr>
+                <tr>
+                  <th>pdf_title</th>
+                  <td>(optional) Either PDF Title or Subject</td>
+                </tr>
+                <tr>
+                  <th>keywords</th>
+                  <td>(optional) PDF Keywords</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>decision</th>
+      <td>(optional) some sessions ended with a decision made by the comittee, ex: "Zustimmung"</td>
+    </tr>
+    <tr>
+      <th>vote_result</th>
+      <td>(optional) object
+        <table>
+          <tr>
+            <th>pro</th>
+            <td>(required) votes for the subject, ex: 1</td>
+          </tr>
+          <tr>
+            <th>contra</th>
+            <td>(required) votes against the subject, ex: 2</td>
+          </tr>
+          <tr>
+            <th>abstention</th>
+            <td>(required) neither/nor contra or pro, ex: 0</td>
+         </tr>
+        </table>
+      </td>
+    </tr>
+    </table>
+  </td>
   </tr>
-  <tr>
-    <th>template_id</th>
-    <td>(optional) some parts uses templates, further information here http://ratsinfo.dresden.de/vo0042.php</td>
-  </tr>
-  <tr>
-    <th>documents</th>
-    <td>
-    (optional) array of documents associated with this part
-      <table>
-        <tr>
-          <th>file_name</th>
-          <td>the file name as it is in the session directory, ex: "00003144.pdf"</td>
-        </tr>
-        <tr>
-          <th>description</th>
-          <td>name of the document, ex: "Vorlage Gremien"</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <th>decision</th>
-    <td>(optional) some sessions ended with a decision made by the comittee, ex: "Zustimmung"</td>
-  </tr>
-  <tr>
-    <th>vote_result</th>
-    <td>(optional) object
-      <table>
-        <tr>
-          <th>pro</th>
-          <td>(required) votes for the subject, ex: 1</td>
-        </tr>
-        <tr>
-          <th>contra</th>
-          <td>(required) votes against the subject, ex: 2</td>
-        </tr>
-        <tr>
-          <th>abstention</th>
-          <td>(required) neither/nor contra or pro, ex: 0</td>
-       </tr>
-      </table>
-    </td>
-  </tr>
-  </table>
-</td>
-</tr>
 </table>
 
 TODO
@@ -165,4 +204,3 @@ TODO
 - continue, where the last scan stopped
 - templates for custom tasks
 - clean up task
-- some kind of tests
