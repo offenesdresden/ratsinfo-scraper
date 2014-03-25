@@ -50,6 +50,19 @@ describe "scrape session 29" do
   end
 end
 
+describe "scrape session 89 (without documents)" do
+  before do
+    VCR.use_cassette('zip_archive_89"') do
+      @session_path = Dir.mktmpdir
+      session_url = "http://ratsinfo.dresden.de/to0040.php?__ksinr=89"
+      @zip_file = Scrape.download_zip_archive(session_url)
+    end
+  end
+  it "should download the archive" do
+    @zip_file.must_equal :no_documents
+  end
+end
+
 describe "scrape session 428" do
   before do
     VCR.use_cassette('zip_archive_428"') do
