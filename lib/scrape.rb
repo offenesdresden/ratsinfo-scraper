@@ -61,6 +61,10 @@ module Scrape
   def self.download_zip_archive(conference_uri)
     agent = Mechanize.new
     page = agent.get(conference_uri)
+    documents = page.parser.css(".smcdocbox td.smc_doc")
+    if documents.size < 1
+      return :no_documents
+    end
     link = page.parser.css(".smcdocboxzip td a").first
 
     archive = Tempfile.new("ratsinfo")
@@ -73,6 +77,10 @@ module Scrape
   def self.scrape_session(session_url, session_path)
     begin
       tmp_file = Scrape.download_zip_archive(session_url)
+      if tmp_file == :no_documents
+         puts "no documents found at #{session_url}"
+        return
+      end
 
       archive = Scrape::DocumentArchive.new(tmp_file.path)
       archive.extract(session_path)
@@ -92,6 +100,8 @@ module Scrape
       metadata_path = File.join(session_path, "metadata.json")
       metadata_file = open(metadata_path, "w+")
       metadata_file.write(json)
+
+      return :ok
     rescue SignalException => e
       raise e
     rescue Exception => e
@@ -99,7 +109,7 @@ module Scrape
       puts e.backtrace
       FileUtils.rm_rf(session_path)
     ensure
-      tmp_file.unlink if tmp_file
+      tmp_file.unlink if tmp_file.is_a? File
     end
   end
 
