@@ -12,8 +12,10 @@ Get the code
 
 Get ruby (>= 2.0.0)
 
-    curl -L https://get.rvm.io | bash
-    rvm install 2.1.0
+    gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+    \curl -sSL https://get.rvm.io | bash -s stable
+    rvm install 2.2.3
+    rvm --default use 2.2.3
 
 Install bundler
 
