@@ -11,15 +11,6 @@ require_relative 'metadata.rb'
 require_relative 'pdf_reader.rb'
 
 module Scrape
-  # Base for all exception
-  class ScrapeException < Exception
-  end
-
-  class ::Time
-    def to_json(options={})
-      utc.iso8601.to_json
-    end
-  end
   class ::String
     # remove in addition to builtin strip also Non-Breaking Space
     def strip_whitespace
@@ -135,7 +126,7 @@ module Scrape
           return entry.get_input_stream
         end
       end
-      raise ScrapeException.new("no index.htm found in archive")
+      raise Exception.new("no index.htm found in archive")
     end
 
     def parse_metadata(index_file)
@@ -187,15 +178,15 @@ module Scrape
     def parse_parts_rows(grouped_rows)
       parts = grouped_rows.map do |rows|
         first_row = rows[0]
-        first_row[1].css("br").each{ |br| br.replace "\n" }
-        description = first_row[1].text.strip_whitespace
-        template_id = first_row[2].text.strip_whitespace
+        first_row[2].css("br").each{ |br| br.replace "\n" }
+        description = first_row[2].text.strip_whitespace
+        template_id = first_row[3].text.strip_whitespace
 
         if template_id.empty?
           template_id = nil
         end
 
-        document_table = first_row[4]
+        document_table = first_row[5]
         if document_table
           document_links = document_table.css("table tbody tr td:not(.smcdocname) a")
           documents = parse_documents_table(document_links)
@@ -206,7 +197,7 @@ module Scrape
         end
         if rows[2]
           cell = rows[2].css("td")[2]
-          vote_result =  parse_vote(cell.text)
+          vote_result = parse_vote(cell.text)
         end
 
         p = Part.new
@@ -236,7 +227,7 @@ module Scrape
       rows.each do |row|
         columns = row.children
         # every new part begins with a new number in the first column
-        if is_number?(columns[0].text)
+        if is_number?(columns[1].text)
           i += 1
           groups[i] = []
         end

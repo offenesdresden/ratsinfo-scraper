@@ -78,7 +78,7 @@ describe "scrape session 428" do
     parts = metadata.parts
     parts.size.must_equal 5
     second = parts[1]
-    second.description.must_equal "Vorhabenbezogener Bebauungsplan Nr. 693, Dresden-Großzschachwitz, Geschäfts- und Parkhaus Pirnaer Landstraße\nhier:\t1. Aufstellungsbeschluss vorhabenbezogener Bebauungsplan\n\t2. Grenzen des vorhabenbezogenen Bebauungsplans"
+    second.description.must_equal "Vorhabenbezogener Bebauungsplan Nr. 693, Dresden-Großzschachwitz, Geschäfts- und Parkhaus Pirnaer Landstraße\n\n\n\nhier:\t1. Aufstellungsbeschluss vorhabenbezogener Bebauungsplan\n\n\t2. Grenzen des vorhabenbezogenen Bebauungsplans"
     second.template_id.must_equal "V0349/09"
     second.vote_result.pro.must_equal 7
     second.vote_result.contra.must_equal 7

@@ -1,5 +1,7 @@
-require_relative 'lib/scrape'
-require_relative 'lib/pdf_reader'
+$:.unshift File.expand_path(File.join(File.dirname(__FILE__), 'lib'))
+
+require 'scrape'
+require 'pdf_reader'
 require 'rake/testtask'
 
 require 'json'

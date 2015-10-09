@@ -1,5 +1,11 @@
 require 'hashie'
 
+class ::Time
+  def to_json(options={})
+    utc.iso8601.to_json
+  end
+end
+
 class Metadata < Hashie::Trash
   property :id
   property :session_url
@@ -13,8 +19,8 @@ class Metadata < Hashie::Trash
   property :parts, with: Proc.new{ |ary| ary.map { |v| Part.new(v) } }
 
   def each_document(&block)
-    documents.each &block
-    parts.each {|p| p.documents.each &block }
+    documents.each(&block)
+    parts.each {|p| p.documents.each(&block) }
   end
 end
 
