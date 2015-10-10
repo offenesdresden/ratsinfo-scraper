@@ -98,7 +98,6 @@ module Scrape
     rescue Exception => e
       puts e.message
       puts e.backtrace
-      FileUtils.rm_rf(session_path)
     ensure
       tmp_file.unlink if tmp_file.is_a? File
     end
