@@ -7,8 +7,10 @@ require 'pry'
 require 'zip'
 require 'date'
 require 'tempfile'
+require 'stringio'
+require 'open4'
 require_relative 'metadata.rb'
-require_relative 'pdf_reader.rb'
+require_relative 'tika_app.rb'
 
 module Scrape
   class ::String
@@ -81,10 +83,12 @@ module Scrape
       metadata.each_document do |doc|
         pdf_path = File.join(session_path, doc.file_name)
         next unless pdf_path.end_with?(".pdf")
-
-        p = PdfReader.new(pdf_path)
-        p.write_pages
-        doc.pdf_metadata = p.metadata
+        text_file_prefix = "#{File.dirname(pdf_path)}/#{File.basename(pdf_path, '.*')}"
+        text_file_path = "#{text_file_prefix}.xml"
+        tika = TikaApp.new(pdf_path)
+        dok = open(text_file_path,"w+")
+        dok.write(tika.get_xml)
+        doc.pdf_metadata = JSON.load(tika.get_metadata)
       end
       json = JSON.pretty_generate(metadata)
 
@@ -98,6 +102,7 @@ module Scrape
     rescue Exception => e
       puts e.message
       puts e.backtrace
+      FileUtils.rm_rf(session_path)
     ensure
       tmp_file.unlink if tmp_file.is_a? File
     end
