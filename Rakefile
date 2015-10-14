@@ -19,6 +19,7 @@ task :scrape => :data do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
   date_range = (Date.new(2008, 01)..Time.now.to_date).select {|d| d.day == 1}
   date_range.each do |date|
+    puts "from date: #{date}"
     uri = sprintf(CALENDAR_URI, date.year, date.month)
     s = Scrape::ConferenceCalendarScraper.new(uri)
     s.each do |session_id|
