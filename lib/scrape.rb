@@ -8,7 +8,6 @@ require 'zip'
 require 'date'
 require 'tempfile'
 require 'stringio'
-require 'open4'
 require_relative 'metadata.rb'
 require_relative 'tika_app.rb'
 
