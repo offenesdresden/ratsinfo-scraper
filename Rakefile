@@ -53,9 +53,11 @@ task :convert do
       pdf_path = File.join(directory, doc.file_name)
       next unless pdf_path.end_with?(".pdf")
 
-      p = PdfReader.new(pdf_path)
-      p.write_pages
-      doc.pdf_metadata = p.metadata
+      tika = TikaApp.new(pdf_path)
+      xmlfile_path = pdf_path.sub('.pdf','.xml')
+      xmlfile = open(xmlfile_path, "w+")
+      xmlfile.write(tika.get_xml)
+
     end
 
     file = File.open(file_name, "w")
