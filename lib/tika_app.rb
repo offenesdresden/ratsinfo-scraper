@@ -5,26 +5,33 @@ require 'open4'
 
 class TikaApp
     def initialize(document)
+        filename = File.basename(document)
+        t = Time.now
+        puts t.strftime("%H:%M:%S") + ": analyze #{filename}"
         @document = document
-        java_cmd = 'java'
-        java_args = '-server -Djava.awt.headless=true'
-        tika_path = "tika-app.jar"
-        @tika_cmd = "#{java_cmd} #{java_args} -jar '#{tika_path}'"
+        @tika_srv = "http://localhost:9998"
     end
 
+    def tika_running
+        out = `curl -X GET http://localhost:9998/tika`
+        if out != 'This is Tika Server. Please PUT' then
+            abort('Start Tika-server first!')
+        end
+    end
+
+
     def get_xml
-        run_tika('--xml')
+        run_tika('tika --header "Accept: text/xml"')
     end
 
     def get_metadata
-        run_tika('--metadata --json')
+        run_tika("meta --header 'Accept: application/json'")
     end
-
 
     private
 
     def run_tika(option)
-        final_cmd = "#{@tika_cmd} #{option} '#{@document}'"
+        final_cmd = "curl -T '#{@document}' #{@tika_srv}/#{option}"
         pid, stdin, stdout, stderr = Open4::popen4(final_cmd)
         stdout_result = stdout.read.strip
         stderr_result = stderr.read.strip

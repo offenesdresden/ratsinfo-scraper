@@ -82,20 +82,20 @@ module Scrape
       metadata.each_document do |doc|
         pdf_path = File.join(session_path, doc.file_name)
         next unless pdf_path.end_with?(".pdf")
-            text_file_prefix = "#{File.dirname(pdf_path)}/#{File.basename(pdf_path, '.*')}"
-            text_file_path = "#{text_file_prefix}.xml"
-
             tika = TikaApp.new(pdf_path)
-            dok = open(text_file_path,"w+")
-            dok.write(tika.get_xml)
+
+            xmlfile_path = pdf_path.sub('.pdf','.xml')
+            xmlfile = open(xmlfile_path, "w+")
+            xmlfile.write(tika.get_xml)
 
             filter = JSON.load(tika.get_metadata)
-            hs = {}
-            hs["Content-Length"] = filter["Content-Length"]
-            hs["Content-Type"] = filter["Content-Type"]
-            hs["Creation-Date"] = filter["Creation-Date"]
-            hs["Last-Modified"] = filter["Last-Modified"]
-            hs["Author"] = filter["Author"]
+            hs = {
+                "Content-Length" => filter["Content-Type"],
+                "Content-Type" => filter["Content-Type"],
+                "Creation-Date" => filter["Creation-Date"],
+                "Last-Modified" => filter["Last-Modified"],
+                "Author" => filter["Author"]
+                }
             doc.pdf_metadata = hs
       end
       json = JSON.pretty_generate(metadata)

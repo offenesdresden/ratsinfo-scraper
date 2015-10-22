@@ -26,14 +26,29 @@ Install Dependencies
     cd ratsinfo
     bundle install
 
+download Apache Tika Server 1.10 or higher
+
+    https://tika.apache.org/download.html
+
+    e.g.: http://www.eu.apache.org/dist/tika/tika-server-1.10.jar
+
+Install java 7 or higher
+
+    install depends on your system
+
 USAGE
 -----
 
-To start scraping use:
+First, start Tika server:
+
+    java -jar tika-server-1.10.jar
+
+
+To start scraping use on other console:
 
     rake
 
-This will extract all documents to the path of the environment variable DOWNLOAD_PATH (defaults to "data") and convert it to plain text
+This will extract all documents to the path of the environment variable DOWNLOAD_PATH (defaults to "data") and convert it to xml files, containing metadata and full text of the pdfs
 
 To scrape an individual session for example: [http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100](http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100)
 
@@ -47,8 +62,7 @@ The download directory will have the following scheme:
 
 - each session have a directory, where the id is the directory name
 - every document belonging to this session will be extracted to this directory
-- if the document is an pdf, it try to extract each page into a plain text file using the
-  [pdf-reader](https://github.com/yob/pdf-reader) gem (00143511.pdf -> 00143511_0.txt, 00143511_1.txt, 00143511_2.txt)
+
 - additionally a JSON file is created, with the session id in its name. This is a machine-readable
   version of the index.htm file, which is contained in the document archives
 
