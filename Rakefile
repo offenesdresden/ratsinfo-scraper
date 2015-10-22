@@ -42,7 +42,7 @@ task :scrape_session, :session_id do |t, args|
   Scrape.scrape_session(session_url, session_path)
 end
 
-task :default => [:scrape, :convert]
+task :default => [:scrape]
 
 desc "Convert existing scraped pdfs to plain text files"
 task :convert do
