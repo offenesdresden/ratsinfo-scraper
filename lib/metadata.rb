@@ -6,7 +6,17 @@ class ::Time
   end
 end
 
-class Metadata < Hashie::Trash
+
+class OParlEntity < Hashie::Trash
+  property :type
+
+  def initialize
+    p :name => self.class.name
+    self.type = "https://oparl.org/schema/1.0/#{self.class.name}"
+  end
+end
+
+class Session < OParlEntity
   property :id
   property :shortName
   property :session_url

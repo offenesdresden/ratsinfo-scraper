@@ -76,10 +76,10 @@ module Scrape
 
       archive = Scrape::DocumentArchive.new(tmp_file.path)
       archive.extract(session_path)
-      metadata = archive.metadata
-      metadata.id = session_url
+      session = archive.session
+      session.id = session_url
 
-      metadata.each_document do |doc|
+      session.each_document do |doc|
         pdf_path = File.join(session_path, doc.file_name)
         next unless pdf_path.end_with?(".pdf")
             tika = TikaApp.new(pdf_path)
@@ -98,11 +98,10 @@ module Scrape
                 }
             doc.pdf_metadata = hs
       end
-      json = JSON.pretty_generate(metadata)
+      json = JSON.pretty_generate(session)
 
-      metadata_path = File.join(session_path, "metadata.json")
-      metadata_file = open(metadata_path, "w+")
-      metadata_file.write(json)
+      session_file = open(File.join(session_path, "session.json"), "w+")
+      session_file.write(json)
 
       return :ok
     rescue SignalException => e
@@ -119,10 +118,10 @@ module Scrape
   class DocumentArchive
     def initialize(file_path)
       @zip_file = Zip::File.open(file_path)
-      @metadata = parse_metadata(index_file)
+      @session = parse_session(index_file)
     end
 
-    attr_reader :metadata
+    attr_reader :session
 
     def extract(path)
       @zip_file.entries.each do |entry|
@@ -141,17 +140,17 @@ module Scrape
       raise Exception.new("no index.htm found in archive")
     end
 
-    def parse_metadata(index_file)
+    def parse_session(index_file)
       doc = Nokogiri::HTML(index_file)
       desc_rows = doc.css("table#smctablevorgang tbody tr")
       content_rows = doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]")
       document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
-      metadata = parse_session_description(desc_rows)
-      metadata.agendaItem = parse_parts_rows(group_content_rows(content_rows))
-      metadata.documents = parse_documents_table(document_links)
-      metadata.downloaded_at = Time.now
-      metadata
+      session = parse_session_description(desc_rows)
+      session.agendaItem = parse_parts_rows(group_content_rows(content_rows))
+      session.documents = parse_documents_table(document_links)
+      session.downloaded_at = Time.now
+      session
     end
 
     def parse_session_description(rows)
@@ -177,14 +176,14 @@ module Scrape
         name = forth_row[1].text
       end
 
-      m = Metadata.new
-      m.shortName = short_name
-      m.name = name.strip_whitespace
-      m.organization = [organization.strip_whitespace]
-      m.start = started_at
-      m.end = ended_at
-      m.locality = locality
-      m
+      session = Session.new
+      session.shortName = short_name
+      session.name = name.strip_whitespace
+      session.organization = [organization.strip_whitespace]
+      session.start = started_at
+      session.end = ended_at
+      session.locality = locality
+      session
     end
 
     def parse_parts_rows(grouped_rows)
