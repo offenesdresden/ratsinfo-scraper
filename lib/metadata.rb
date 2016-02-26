@@ -8,19 +8,20 @@ end
 
 class Metadata < Hashie::Trash
   property :id
+  property :shorttitle
   property :session_url
-  property :description
-  property :committee
-  property :started_at, with: Proc.new { |v| Time.parse(v) }
-  property :ended_at, with: Proc.new { |v| Time.parse(v) }
-  property :location
+  property :name
+  property :organization
+  property :start, with: Proc.new { |v| Time.parse(v) }
+  property :end, with: Proc.new { |v| Time.parse(v) }
+  property :locality
   property :downloaded_at, with: Proc.new { |v| Time.parse(v) }
   property :documents, with: Proc.new{ |ary| ary.map { |v| Document.new(v) } }
-  property :parts, with: Proc.new{ |ary| ary.map { |v| Part.new(v) } }
+  property :agendaItem, with: Proc.new{ |ary| ary.map { |v| Part.new(v) } }
 
   def each_document(&block)
     documents.each(&block)
-    parts.each {|p| p.documents.each(&block) }
+    agendaItem.each {|p| p.documents.each(&block) }
   end
 end
 

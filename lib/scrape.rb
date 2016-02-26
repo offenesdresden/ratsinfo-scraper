@@ -77,7 +77,7 @@ module Scrape
       archive = Scrape::DocumentArchive.new(tmp_file.path)
       archive.extract(session_path)
       metadata = archive.metadata
-      metadata.session_url = session_url
+      metadata.id = session_url
 
       metadata.each_document do |doc|
         pdf_path = File.join(session_path, doc.file_name)
@@ -148,7 +148,7 @@ module Scrape
       document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
       metadata = parse_session_description(desc_rows)
-      metadata.parts = parse_parts_rows(group_content_rows(content_rows))
+      metadata.agendaItem = parse_parts_rows(group_content_rows(content_rows))
       metadata.documents = parse_documents_table(document_links)
       metadata.downloaded_at = Time.now
       metadata
@@ -156,8 +156,8 @@ module Scrape
 
     def parse_session_description(rows)
       first_row = rows[0].css("td")
-      id = first_row[1].text
-      committee = first_row[3].text
+      shorttitle = first_row[1].text
+      organization = first_row[3].text
 
       second_row = rows[1].css("td")
       date = second_row[1].text
@@ -170,20 +170,20 @@ module Scrape
 
       third_row = rows[2].css("td")
       if third_row[0].text.include?("Bezeichnung:") # location row is missing
-        description = third_row[1].text
+        name = third_row[1].text
       else
-        location = third_row[1].text.strip_whitespace
+        locality = third_row[1].text.strip_whitespace
         forth_row = rows[3].css("td")
-        description = forth_row[1].text
+        name = forth_row[1].text
       end
 
       m = Metadata.new
-      m.id = id
-      m.description = description.strip_whitespace
-      m.committee = committee.strip_whitespace
-      m.started_at = started_at
-      m.ended_at = ended_at
-      m.location = location
+      m.shorttitle = shorttitle
+      m.name = name.strip_whitespace
+      m.organization = organization.strip_whitespace
+      m.start = started_at
+      m.end = ended_at
+      m.locality = locality
       m
     end
 
