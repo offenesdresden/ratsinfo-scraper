@@ -6,19 +6,28 @@ class ::Time
   end
 end
 
-
+module OParl
+##
+# https://oparl.org/spezifikation/online-ansicht/#eigenschaften-mit-verwendung-in-mehreren-objekttypen
 class OParlEntity < Hashie::Trash
+  property :id
   property :type
+  property :name
+  property :shortName
+  property :license
+  property :created
+  property :modified
+  property :keyword
+  property :parentID
 
-  def initialize
-    p :name => self.class.name
-    self.type = "https://oparl.org/schema/1.0/#{self.class.name}"
+  def initialize(*a)
+    super
+    
+    self.type = "https://oparl.org/schema/1.0/#{self.class.name.split(/::/).last}"
   end
 end
 
-class Session < OParlEntity
-  property :id
-  property :shortName
+class Meeting < OParlEntity
   property :session_url
   property :name
   property :organization
@@ -26,20 +35,14 @@ class Session < OParlEntity
   property :end, with: Proc.new { |v| Time.parse(v) }
   property :locality
   property :downloaded_at, with: Proc.new { |v| Time.parse(v) }
-  property :documents, with: Proc.new{ |ary| ary.map { |v| Document.new(v) } }
-  property :agendaItem, with: Proc.new{ |ary| ary.map { |v| Part.new(v) } }
+  property :agendaItem, with: Proc.new{ |ary| ary.map { |v| AgendaItem.new(v) } }
+  property :resultsProtocol, with: Proc.new { |v| File.new(v) }
+  property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
 
   def each_document(&block)
-    documents.each(&block)
-    agendaItem.each {|p| p.documents.each(&block) }
+    block.call(resultsProtocol) if resultsProtocol
+    auxiliaryFile.each(&block)
   end
-end
-
-class Document < Hashie::Trash
-  property :file_name
-  property :description
-  property :pdf_metadata
-  property :raw_classifications
 end
 
 class PdfMetadata < Hashie::Trash
@@ -85,17 +88,26 @@ class PdfMetadata < Hashie::Trash
   end
 end
 
-class Part < Hashie::Trash
-  property :description
-  property :template_id
-  property :documents, with: Proc.new { |ary| ary.map { |v| Document.new(v) } }
-  property :decision
-  property :vote_result, with: Proc.new { |v| VoteResult.new(v) }
+class AgendaItem < OParlEntity
+  property :consultation
 end
 
-class VoteResult < Hashie::Trash
-  property :pro, default: 0
-  property :contra, default: 0
-  property :abstention, default: 0
-  property :prejudiced, default: 0
+class Consultation < OParlEntity
+  property :meeting
+end
+
+class File < OParlEntity
+  property :fileName
+  property :consultation, with: Proc.new { |v| [Consultation.new(v)] }
+end
+
+##
+# Our invention!
+class VoteResult < OParlEntity
+  property :yes
+  property :no
+  property :neutral
+  property :biased
+end
+
 end

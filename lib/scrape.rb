@@ -76,11 +76,11 @@ module Scrape
 
       archive = Scrape::DocumentArchive.new(tmp_file.path)
       archive.extract(session_path)
-      session = archive.session
-      session.id = session_url
+      meeting = archive.meeting
+      meeting.id = session_url
 
-      session.each_document do |doc|
-        pdf_path = File.join(session_path, doc.file_name)
+      meeting.each_document do |doc|
+        pdf_path = File.join(session_path, doc.fileName)
         next unless pdf_path.end_with?(".pdf")
             tika = TikaApp.new(pdf_path)
 
@@ -88,6 +88,7 @@ module Scrape
             xmlfile = open(xmlfile_path, "w+")
             xmlfile.write(tika.get_xml)
 
+=begin
             filter = JSON.load(tika.get_metadata)
             hs = {
                 "Content-Length" => filter["Content-Type"],
@@ -97,11 +98,12 @@ module Scrape
                 "Author" => filter["Author"]
                 }
             doc.pdf_metadata = hs
+=end
       end
-      json = JSON.pretty_generate(session)
+      json = JSON.pretty_generate(meeting)
 
-      session_file = open(File.join(session_path, "session.json"), "w+")
-      session_file.write(json)
+      meeting_file = open(File.join(session_path, "meeting.json"), "w+")
+      meeting_file.write(json)
 
       return :ok
     rescue SignalException => e
@@ -118,10 +120,10 @@ module Scrape
   class DocumentArchive
     def initialize(file_path)
       @zip_file = Zip::File.open(file_path)
-      @session = parse_session(index_file)
+      @meeting = parse_meeting(index_file)
     end
 
-    attr_reader :session
+    attr_reader :meeting
 
     def extract(path)
       @zip_file.entries.each do |entry|
@@ -140,20 +142,20 @@ module Scrape
       raise Exception.new("no index.htm found in archive")
     end
 
-    def parse_session(index_file)
+    def parse_meeting(index_file)
       doc = Nokogiri::HTML(index_file)
       desc_rows = doc.css("table#smctablevorgang tbody tr")
       content_rows = doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]")
       document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
-      session = parse_session_description(desc_rows)
-      session.agendaItem = parse_parts_rows(group_content_rows(content_rows))
-      session.documents = parse_documents_table(document_links)
-      session.downloaded_at = Time.now
-      session
+      meeting = parse_meeting_description(desc_rows)
+      meeting.agendaItem = parse_agenda_rows(group_content_rows(content_rows))
+      meeting.auxiliaryFile = parse_files_table(document_links)
+      meeting.downloaded_at = Time.now
+      meeting
     end
 
-    def parse_session_description(rows)
+    def parse_meeting_description(rows)
       first_row = rows[0].css("td")
       short_name = first_row[1].text
       organization = first_row[3].text
@@ -176,18 +178,18 @@ module Scrape
         name = forth_row[1].text
       end
 
-      session = Session.new
-      session.shortName = short_name
-      session.name = name.strip_whitespace
-      session.organization = [organization.strip_whitespace]
-      session.start = started_at
-      session.end = ended_at
-      session.locality = locality
-      session
+      meeting = OParl::Meeting.new
+      meeting.shortName = short_name
+      meeting.name = name.strip_whitespace
+      meeting.organization = [organization.strip_whitespace]
+      meeting.start = started_at
+      meeting.end = ended_at
+      meeting.locality = locality
+      meeting
     end
 
-    def parse_parts_rows(grouped_rows)
-      parts = grouped_rows.map do |rows|
+    def parse_agenda_rows(grouped_rows)
+       grouped_rows.map do |rows|
         first_row = rows[0]
         first_row[2].css("br").each{ |br| br.replace "\n" }
         description = first_row[2].text.strip_whitespace
@@ -200,7 +202,7 @@ module Scrape
         document_table = first_row[5]
         if document_table
           document_links = document_table.css("table tbody tr td:not(.smcdocname) a")
-          documents = parse_documents_table(document_links)
+          files = parse_files_table(document_links)
         end
 
         if rows[1]
@@ -211,24 +213,20 @@ module Scrape
           vote_result = parse_vote(cell.text)
         end
 
-        p = Part.new
-        p.description = description
-        p.template_id = template_id
-        p.documents = documents
-        p.decision = decision
-        p.vote_result = vote_result
-        p
+        OParl::AgendaItem.new(
+          { :name => description,
+            :consultation => template_id
+          })
+        # TODO: deal with files, decision, vote_result
       end
-
-      parts
     end
 
-    def parse_documents_table(links)
+    def parse_files_table(links)
       links.map do |link|
-        d = Document.new
-        d.file_name = link["href"]
-        d.description = link["title"].strip_whitespace
-        d
+        f = OParl::File.new
+        f.fileName = link["href"]
+        f.name = link["title"].strip_whitespace
+        f
       end
     end
 
@@ -255,7 +253,7 @@ module Scrape
     end
 
     def parse_vote(text)
-      result = VoteResult.new
+      result = OParl::VoteResult.new
       text = text.strip_whitespace
       parts = text.split(", ")
       parts.each do |part|
@@ -263,13 +261,13 @@ module Scrape
         number = Integer(number.strip_whitespace) rescue 0
         case type.strip_whitespace
         when "Ja"
-          result.pro = number
+          result.yes = number
         when "Nein"
-          result.contra = number
+          result.no = number
         when "Enthaltungen"
-          result.abstention = number
+          result.neutral = number
         when "Befangen"
-          result.prejudiced = number
+          result.biased = number
         end
       end
       result

@@ -31,6 +31,10 @@ class TikaApp
     private
 
     def run_tika(option)
+        ""
+    end
+    
+    def _run_tika(option)
         final_cmd = "curl -T '#{@document}' #{@tika_srv}/#{option}"
         pid, stdin, stdout, stderr = Open4::popen4(final_cmd)
         stdout_result = stdout.read.strip
