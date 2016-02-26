@@ -8,7 +8,7 @@ end
 
 class Metadata < Hashie::Trash
   property :id
-  property :shorttitle
+  property :shortName
   property :session_url
   property :name
   property :organization

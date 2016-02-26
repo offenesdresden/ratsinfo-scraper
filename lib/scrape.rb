@@ -156,7 +156,7 @@ module Scrape
 
     def parse_session_description(rows)
       first_row = rows[0].css("td")
-      shorttitle = first_row[1].text
+      short_name = first_row[1].text
       organization = first_row[3].text
 
       second_row = rows[1].css("td")
@@ -178,9 +178,9 @@ module Scrape
       end
 
       m = Metadata.new
-      m.shorttitle = shorttitle
+      m.shortName = short_name
       m.name = name.strip_whitespace
-      m.organization = organization.strip_whitespace
+      m.organization = [organization.strip_whitespace]
       m.start = started_at
       m.end = ended_at
       m.locality = locality
