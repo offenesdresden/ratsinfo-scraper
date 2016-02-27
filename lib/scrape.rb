@@ -12,43 +12,6 @@ require_relative 'metadata.rb'
 require_relative 'tika_app.rb'
 
 module Scrape
-  class ::String
-    # remove in addition to builtin strip also Non-Breaking Space
-    def strip_whitespace
-      gsub(/\A[[:space:]]+|[[:space:]]+\z/, '')
-    end
-  end
-
-  # Parse the session calendar and yield those session ids containing documents
-  class ConferenceCalendarScraper
-    include Enumerable
-    def initialize(scrape_url)
-      @scrape_url = scrape_url
-    end
-    include Enumerable
-
-    def each(&block)
-      doc = Nokogiri::HTML(open(@scrape_url))
-      doc.css("table.smccontenttable tr").each do |row|
-        conference_id = parse_row(row)
-        yield conference_id unless conference_id.nil?
-      end
-    end
-
-    private
-    def parse_row(row)
-      doc_cell = row.css(".smcdocbox").first
-      return if doc_cell == nil
-      conference_link = row.xpath("./td[6]/a").first
-      if conference_link.nil?
-        print("WARNING session_link not found")
-        return
-      end
-      query = CGI.parse(conference_link["href"])
-      id = query["to0040.php?__ksinr"].first
-      id
-    end
-  end
 
   def self.download_zip_archive(conference_uri)
     agent = Mechanize.new
@@ -139,6 +102,49 @@ module Scrape
       tmp_file.unlink if tmp_file.is_a? File
     end
   end
+
+
+
+
+
+  class ::String
+    # remove in addition to builtin strip also Non-Breaking Space
+    def strip_whitespace
+      gsub(/\A[[:space:]]+|[[:space:]]+\z/, '')
+    end
+  end
+
+  # Parse the session calendar and yield those session ids containing documents
+  class ConferenceCalendarScraper
+    include Enumerable
+    def initialize(scrape_url)
+      @scrape_url = scrape_url
+    end
+    include Enumerable
+
+    def each(&block)
+      doc = Nokogiri::HTML(open(@scrape_url))
+      doc.css("table.smccontenttable tr").each do |row|
+        conference_id = parse_row(row)
+        yield conference_id unless conference_id.nil?
+      end
+    end
+
+    private
+    def parse_row(row)
+      doc_cell = row.css(".smcdocbox").first
+      return if doc_cell == nil
+      conference_link = row.xpath("./td[6]/a").first
+      if conference_link.nil?
+        print("WARNING session_link not found")
+        return
+      end
+      query = CGI.parse(conference_link["href"])
+      id = query["to0040.php?__ksinr"].first
+      id
+    end
+  end
+
 
   class DocumentArchive
     def initialize(file_path)
