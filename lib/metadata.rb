@@ -37,6 +37,7 @@ class Meeting < OParlEntity
   property :downloaded_at, with: Proc.new { |v| Time.parse(v) }
   property :agendaItem, with: Proc.new{ |ary| ary.map { |v| AgendaItem.new(v) } }
   property :resultsProtocol, with: Proc.new { |v| File.new(v) }
+  property :verbatimProtocol, with: Proc.new { |v| File.new(v) }
   property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
 
   def each_document(&block)

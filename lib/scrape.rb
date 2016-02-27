@@ -150,7 +150,28 @@ module Scrape
 
       meeting = parse_meeting_description(desc_rows)
       meeting.agendaItem = parse_agenda_rows(group_content_rows(content_rows))
-      meeting.auxiliaryFile = parse_files_table(document_links)
+      files = parse_files_table(document_links)
+      meeting.auxiliaryFile = files.select do |file|
+        case file.name
+        when /niederschrift/i
+          if meeting.verbatimProtocol
+          then true
+          else
+            meeting.verbatimProtocol = file
+            false
+          end
+        when /beschlussausfertigung/i
+          if meeting.resultsProtocol
+          then true
+          else
+            meeting.resultsProtocol = file
+            false
+          end
+        else
+          # auxiliaryFile
+          true
+        end
+      end
       meeting.downloaded_at = Time.now
       meeting
     end
