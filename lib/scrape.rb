@@ -66,6 +66,24 @@ module Scrape
     archive
   end
 
+
+  private
+  def self.participants(session_url)
+      participant_url = session_url.gsub! 'to0040.', 'to0045.'
+      doc = Nokogiri::HTML(open(participant_url))
+      participants = Array.new()
+      doc.css("table.smccontenttable tr").each do |row|
+        participant = row.css("td a")
+        if participant.to_s != ''
+          name = participant.attr('title').to_s()[18..-1]
+          link = row.css("td a").attr('href').to_s()
+          participants.push({ "id" => link, "name" => name })
+        end
+      end
+    participants
+  end
+
+
   def self.scrape_session(session_url, session_path)
     begin
       tmp_file = Scrape.download_zip_archive(session_url)
@@ -100,6 +118,11 @@ module Scrape
             doc.pdf_metadata = hs
 =end
       end
+
+      participants = participants(session_url)
+      meeting.participant = participants
+
+
       json = JSON.pretty_generate(meeting)
 
       meeting_file = open(File.join(session_path, "meeting.json"), "w+")

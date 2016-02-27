@@ -22,7 +22,7 @@ class OParlEntity < Hashie::Trash
 
   def initialize(*a)
     super
-    
+
     self.type = "https://oparl.org/schema/1.0/#{self.class.name.split(/::/).last}"
   end
 end
@@ -39,6 +39,7 @@ class Meeting < OParlEntity
   property :resultsProtocol, with: Proc.new { |v| File.new(v) }
   property :verbatimProtocol, with: Proc.new { |v| File.new(v) }
   property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
+  property :participant
 
   def each_document(&block)
     block.call(resultsProtocol) if resultsProtocol
