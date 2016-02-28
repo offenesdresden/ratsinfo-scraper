@@ -30,23 +30,6 @@ module Scrape
   end
 
 
-  private
-  def self.participants(session_url)
-      participant_url = session_url.gsub! 'to0040.', 'to0045.'
-      doc = Nokogiri::HTML(open(participant_url))
-      participants = Array.new()
-      doc.css("table.smccontenttable tr").each do |row|
-        participant = row.css("td a")
-        if participant.to_s != ''
-          name = participant.attr('title').to_s()[18..-1]
-          link = row.css("td a").attr('href').to_s()
-          participants.push({ "id" => link, "name" => name })
-        end
-      end
-    participants
-  end
-
-
   def self.scrape_session(session_url, session_path)
     begin
       tmp_file = Scrape.download_zip_archive(session_url)
@@ -55,7 +38,7 @@ module Scrape
         return
       end
 
-      archive = Scrape::DocumentArchive.new(tmp_file.path)
+      archive = Scrape::DocumentArchive.new(tmp_file.path, session_url)
       archive.extract(session_path)
       meeting = archive.meeting
       meeting.id = session_url
@@ -81,10 +64,6 @@ module Scrape
             doc.pdf_metadata = hs
 =end
       end
-
-      participants = participants(session_url)
-      meeting.participant = participants
-
 
       json = JSON.pretty_generate(meeting)
 
@@ -147,9 +126,9 @@ module Scrape
 
 
   class DocumentArchive
-    def initialize(file_path)
+    def initialize(file_path, meeting_url)
       @zip_file = Zip::File.open(file_path)
-      @meeting = parse_meeting(index_file)
+      @meeting = parse_meeting(index_file, meeting_url)
     end
 
     attr_reader :meeting
@@ -171,7 +150,7 @@ module Scrape
       raise Exception.new("no index.htm found in archive")
     end
 
-    def parse_meeting(index_file)
+    def parse_meeting(index_file, meeting_url)
       doc = Nokogiri::HTML(index_file)
       desc_rows = doc.css("table#smctablevorgang tbody tr")
       content_rows = doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]")
@@ -179,6 +158,7 @@ module Scrape
 
       meeting = parse_meeting_description(desc_rows)
       meeting.agendaItem = parse_agenda_rows(group_content_rows(content_rows))
+      meeting.participant = parse_participants(meeting_url)
       files = parse_files_table(document_links)
       meeting.auxiliaryFile = files.select do |file|
         case file.name
@@ -236,6 +216,26 @@ module Scrape
       meeting.end = ended_at
       meeting.locality = locality
       meeting
+    end
+
+    def parse_participants(meeting_url)
+      participant_url = meeting_url.gsub! '/to0040.php', '/to0045.php'
+      participants = Array.new()
+      doc = Nokogiri::HTML(open(participant_url))
+      doc.css("table.smccontenttable tr").each do |row|
+        participant = row.css("td a")
+        if participant.to_s != ''
+          name = participant.attr('title').to_s()[18..-1]
+          itsUrl = row.css("td a").attr('href').to_s()
+          participants.push(
+            OParl::Participant.new(
+            { :id => itsUrl,
+              :name => name
+            })
+          )
+        end
+      end
+      participants
     end
 
     def parse_agenda_rows(grouped_rows)

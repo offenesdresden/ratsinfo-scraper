@@ -103,6 +103,13 @@ class File < OParlEntity
   property :consultation, with: Proc.new { |v| [Consultation.new(v)] }
 end
 
+class Participant < OParlEntity
+    property :id
+    property :Name
+end
+
+
+
 ##
 # Our invention!
 class VoteResult < OParlEntity
