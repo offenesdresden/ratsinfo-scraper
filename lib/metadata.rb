@@ -92,6 +92,9 @@ end
 
 class AgendaItem < OParlEntity
   property :consultation
+  property :number
+  property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
+
 end
 
 class Consultation < OParlEntity

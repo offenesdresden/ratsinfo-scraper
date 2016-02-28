@@ -246,6 +246,8 @@ module Scrape
         description = first_row[2].text.strip_whitespace
         template_id = first_row[3].text.strip_whitespace
 
+        number = first_row[1].text
+
         if template_id.empty?
           template_id = nil
         end
@@ -266,9 +268,11 @@ module Scrape
 
         OParl::AgendaItem.new(
           { :name => description,
-            :consultation => template_id
+            :consultation => template_id,
+            :number => number,
+            :auxiliaryFile => files
           })
-        # TODO: deal with files, decision, vote_result
+        # TODO: deal with decision, vote_result
       end
     end
 
@@ -300,7 +304,10 @@ module Scrape
     end
 
     def is_number?(i)
-      true if Float(i) rescue false
+      res = false
+      res = true if i =~ /^\d+\.\d/ rescue false #findet float am Anfang -> https://github.com/offenesdresden/ratsinfo-scraper/issues/13
+      res = true if Float(i) rescue false
+      res
     end
 
     def parse_vote(text)
