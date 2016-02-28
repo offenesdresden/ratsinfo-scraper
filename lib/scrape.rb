@@ -41,7 +41,6 @@ module Scrape
       archive = Scrape::DocumentArchive.new(tmp_file.path, session_url)
       archive.extract(session_path)
       meeting = archive.meeting
-      meeting.id = session_url
 
       meeting.each_document do |doc|
         pdf_path = File.join(session_path, doc.fileName)
@@ -157,6 +156,7 @@ module Scrape
       document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
       meeting = parse_meeting_description(desc_rows)
+      meeting.id = meeting_url
       meeting.agendaItem = parse_agenda_rows(group_content_rows(content_rows))
       meeting.participant = parse_participants(meeting_url)
       files = parse_files_table(document_links)
@@ -209,6 +209,7 @@ module Scrape
       end
 
       meeting = OParl::Meeting.new
+      meeting.id = nil
       meeting.shortName = short_name
       meeting.name = name.strip_whitespace
       meeting.organization = [organization.strip_whitespace]
