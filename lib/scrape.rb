@@ -229,7 +229,7 @@ module Scrape
           name = participant.attr('title').to_s()[18..-1]
           itsUrl = row.css("td a").attr('href').to_s()
           participants.push(
-            OParl::Participant.new(
+            OParl::Person.new(
             { :id => itsUrl,
               :name => name
             })
