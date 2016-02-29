@@ -162,6 +162,13 @@ module Scrape
       files = parse_files_table(document_links)
       meeting.auxiliaryFile = files.select do |file|
         case file.name
+        when /einladung/i
+          if meeting.invitation
+          then true
+          else
+            meeting.invitation = file
+            false
+          end
         when /niederschrift/i
           if meeting.verbatimProtocol
           then true
@@ -169,7 +176,7 @@ module Scrape
             meeting.verbatimProtocol = file
             false
           end
-        when /beschlussausfertigung/i
+        when /beschlussausfertigung/i, /ergebnisprotokoll/i
           if meeting.resultsProtocol
           then true
           else
