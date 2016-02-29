@@ -36,15 +36,22 @@ class Meeting < OParlEntity
   property :locality
   property :downloaded_at, with: Proc.new { |v| Time.parse(v) }
   property :agendaItem, with: Proc.new{ |ary| ary.map { |v| AgendaItem.new(v) } }
-  property :invitation, with: Proc.new { |v| File.new(v) }
-  property :resultsProtocol, with: Proc.new { |v| File.new(v) }
-  property :verbatimProtocol, with: Proc.new { |v| File.new(v) }
-  property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
+  property :invitation
+  property :resultsProtocol
+  property :verbatimProtocol
+  property :auxiliaryFile
   property :participant
 
+  attr_accessor :files
+
+  def initialize(*a)
+    super
+
+    self.files = []
+  end
+
   def each_document(&block)
-    block.call(resultsProtocol) if resultsProtocol
-    auxiliaryFile.each(&block)
+    self.files.each &block
   end
 end
 
@@ -94,9 +101,9 @@ end
 class AgendaItem < OParlEntity
   property :consultation
   property :number
-  property :resolutionFile, with: Proc.new { |v| File.new(v) }
+  property :resolutionFile
   property :resolutionText
-  property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
+  property :auxiliaryFile
 end
 
 class Consultation < OParlEntity
@@ -105,7 +112,6 @@ end
 
 class File < OParlEntity
   property :fileName
-  property :consultation, with: Proc.new { |v| [Consultation.new(v)] }
 end
 
 class Person < OParlEntity

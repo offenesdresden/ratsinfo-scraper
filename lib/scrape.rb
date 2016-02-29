@@ -64,10 +64,11 @@ module Scrape
 =end
       end
 
-      json = JSON.pretty_generate(meeting)
-
-      meeting_file = open(File.join(session_path, "meeting.json"), "w+")
-      meeting_file.write(json)
+      #write_json_file(File.join(session_path, "meeting.json"), meeting)
+      write_json_file(File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json"), meeting)
+      meeting.files.each do |file|
+        write_json_file(File.join(DOWNLOAD_PATH, "files", "#{file.id}.json"), file)
+      end
 
       return :ok
     rescue SignalException => e
@@ -81,7 +82,14 @@ module Scrape
     end
   end
 
+  def self.write_json_file(path, content)
+    FileUtils.mkdir_p File.dirname(path)
 
+    json = JSON.pretty_generate(content)
+    file = open(path, "w+")
+    file.write(json)
+    file.close
+  end
 
 
 
@@ -159,37 +167,24 @@ module Scrape
       if meeting_url =~ /ksinr=(\d+)/
         meeting.id = $1
       end
-      meeting.agendaItem = parse_agenda_rows(group_content_rows(content_rows))
       meeting.participant = parse_participants(meeting_url)
-      files = parse_files_table(document_links)
-      meeting.auxiliaryFile = files.select do |file|
+      meeting.files = parse_files_table(document_links)
+      meeting.files.each do |file|
         case file.name
         when /einladung/i
-          if meeting.invitation
-          then true
-          else
-            meeting.invitation = file
-            false
-          end
+          meeting.invitation = file.id unless meeting.invitation
         when /niederschrift/i
-          if meeting.verbatimProtocol
-          then true
-          else
-            meeting.verbatimProtocol = file
-            false
-          end
+          meeting.verbatimProtocol = file.id unless meeting.verbatimProtocol
         when /beschlussausfertigung/i, /ergebnisprotokoll/i
-          if meeting.resultsProtocol
-          then true
-          else
-            meeting.resultsProtocol = file
-            false
-          end
+          meeting.resultsProtocol = file.id unless meeting.resultsProtocol
         else
-          # auxiliaryFile
-          true
+          meeting.auxiliaryFile = [] unless meeting.auxiliaryFile
+          meeting.auxiliaryFile.push(file.id)
         end
       end
+      agenda = parse_agenda_rows(group_content_rows(content_rows))
+      meeting.agendaItem = agenda[0]
+      meeting.files.concat(agenda[1])
       meeting.downloaded_at = Time.now
       meeting
     end
@@ -253,7 +248,8 @@ module Scrape
     end
 
     def parse_agenda_rows(grouped_rows)
-       grouped_rows.map do |rows|
+      all_files = []
+      agenda_items = grouped_rows.map do |rows|
         first_row = rows[0]
         first_row[2].css("br").each{ |br| br.replace "\n" }
         description = first_row[2].text.strip_whitespace
@@ -287,34 +283,31 @@ module Scrape
             :consultation => paper_id,
             :number => number,
           })
-        files.select! do |file|
+        files.each do |file|
           case file.name
           when /beschlussausfertigung/i, /ergebnisprotokoll/i
-            if agenda_item.resolutionFile
-            then true
-            else
-              agenda_item.resolutionFile = file
-              false
-            end
+            agenda_item.resolutionFile = file.id unless agenda_item.resolutionFile
           else
-            # auxiliaryFile
-            true
+            agenda_item.auxiliaryFile = [] unless agenda_item.auxiliaryFile
+            agenda_item.auxiliaryFile.push(file.id)
           end
         end
-        if files.size > 0
-          agenda_item.auxiliaryFile = files
-        end
+        all_files.concat(files)
 
         # TODO: deal with decision, vote_result
 
         agenda_item
-       end
+      end
+      [agenda_items, all_files]
     end
 
     def parse_files_table(links)
       links.map do |link|
         f = OParl::File.new
         f.fileName = link["href"]
+        if f.fileName =~ /0*(\d+)/
+          f.id = $1
+        end
         f.name = link["title"].strip_whitespace
         f
       end
