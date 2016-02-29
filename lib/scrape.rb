@@ -273,14 +273,33 @@ module Scrape
           vote_result = parse_vote(cell.text)
         end
 
-        OParl::AgendaItem.new(
+        agenda_item = OParl::AgendaItem.new(
           { :name => description,
             :consultation => template_id,
             :number => number,
-            :auxiliaryFile => files
           })
+        files.select! do |file|
+          case file.name
+          when /beschlussausfertigung/i, /ergebnisprotokoll/i
+            if agenda_item.resolutionFile
+            then true
+            else
+              agenda_item.resolutionFile = file
+              false
+            end
+          else
+            # auxiliaryFile
+            true
+          end
+        end
+        if files.size > 0
+          agenda_item.auxiliaryFile = files
+        end
+
         # TODO: deal with decision, vote_result
-      end
+
+        agenda_item
+       end
     end
 
     def parse_files_table(links)

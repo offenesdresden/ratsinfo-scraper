@@ -94,8 +94,9 @@ end
 class AgendaItem < OParlEntity
   property :consultation
   property :number
+  property :resolutionFile, with: Proc.new { |v| File.new(v) }
+  property :resolutionText
   property :auxiliaryFile, with: Proc.new { |ary| ary.map { |v| File.new(v) } }
-
 end
 
 class Consultation < OParlEntity
