@@ -238,7 +238,7 @@ module Scrape
           participants.push(
             OParl::Person.new(
             { :id => itsUrl,
-              :name => name
+              :name => name.strip_whitespace
             })
           )
         end
