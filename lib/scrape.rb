@@ -156,7 +156,9 @@ module Scrape
       document_links = doc.css("body > table.smcdocbox tbody td:not(.smcdocname) a")
 
       meeting = parse_meeting_description(desc_rows)
-      meeting.id = meeting_url
+      if meeting_url =~ /ksinr=(\d+)/
+        meeting.id = $1
+      end
       meeting.agendaItem = parse_agenda_rows(group_content_rows(content_rows))
       meeting.participant = parse_participants(meeting_url)
       files = parse_files_table(document_links)
@@ -235,9 +237,13 @@ module Scrape
         if participant.to_s != ''
           name = participant.attr('title').to_s()[18..-1]
           itsUrl = row.css("td a").attr('href').to_s()
+          person_id = nil
+          if itsUrl =~ /kpenr=(\d+)/
+            person_id = $1
+          end
           participants.push(
             OParl::Person.new(
-            { :id => itsUrl,
+            { :id => person_id,
               :name => name.strip_whitespace
             })
           )
@@ -251,12 +257,15 @@ module Scrape
         first_row = rows[0]
         first_row[2].css("br").each{ |br| br.replace "\n" }
         description = first_row[2].text.strip_whitespace
-        template_id = first_row[3].text.strip_whitespace
 
         number = first_row[1].text
 
-        if template_id.empty?
-          template_id = nil
+        paper = first_row[3].css("smctag_a")
+        paper_link = (not paper.empty? and paper.attr('href')).to_s
+        if paper_link =~ /kvonr=(\d+)/
+          paper_id = $1
+        else
+          paper_id = nil
         end
 
         document_table = first_row[5]
@@ -275,7 +284,7 @@ module Scrape
 
         agenda_item = OParl::AgendaItem.new(
           { :name => description,
-            :consultation => template_id,
+            :consultation => paper_id,
             :number => number,
           })
         files.select! do |file|
