@@ -106,10 +106,6 @@ class AgendaItem < OParlEntity
   property :auxiliaryFile
 end
 
-class Consultation < OParlEntity
-  property :meeting
-end
-
 class File < OParlEntity
   property :fileName
 end
@@ -117,6 +113,21 @@ end
 class Person < OParlEntity
 end
 
+class Paper < OParlEntity
+  property :publishedDate
+  property :paperType
+
+  attr_accessor :files
+  property :mainFile
+  property :auxiliaryFile
+
+  property :consultation
+end
+
+class Consultation < OParlEntity
+  property :meeting
+  property :organization
+end
 
 
 ##

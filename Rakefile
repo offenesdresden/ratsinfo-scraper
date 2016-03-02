@@ -9,12 +9,20 @@ CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
 SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
+VORLAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/vo0042.php"
+VORLAGE_PATH = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
+
+ANFRAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/ag0041.php"
+ANFRAGE_PATH = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
+
 METADATA_FILES = FileList["./data/**/metadata.json"]
 
 directory 'data'
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape => :data do
+task :scrape => [:scrape_sessions, :scrape_vorlagen, :scrape_anfragen]
+
+task :scrape_sessions => :data do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
   date_range = (Date.new(2012, 01)..Time.now.to_date).select {|d| d.day == 1}
   date_range.each do |date|
@@ -31,6 +39,20 @@ task :scrape => :data do
       session_url = sprintf(SESSION_URI, session_id)
       Scrape.scrape_session(session_url, session_path)
     end
+  end
+end
+
+task :scrape_vorlagen => :data do
+  Scrape::VorlagenListeScraper.new(VORLAGEN_LISTE_PATH).each do |paper|
+    paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, paper.id)).scrape
+    p :paper => paper
+  end
+end
+
+task :scrape_anfragen => :data do
+  Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_PATH).each do |paper|
+    paper = Scrape::PaperScraper.new(sprintf(ANFRAGE_PATH, paper.id)).scrape
+    p :paper => paper
   end
 end
 
