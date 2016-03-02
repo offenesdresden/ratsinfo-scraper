@@ -35,6 +35,11 @@ class OParlEntity < Hashie::Trash
     file.write(json)
     file.close
   end
+
+  def self.load_from(path)
+    json = JSON.load(::File.read(path))
+    self.new(json)
+  end
 end
 
 class Meeting < OParlEntity

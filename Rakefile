@@ -16,12 +16,14 @@ VORLAGE_PATH = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
 ANFRAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
 ANFRAGE_PATH = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
+FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
+
 METADATA_FILES = FileList["./data/**/metadata.json"]
 
 directory DOWNLOAD_PATH
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions]
+task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions, :fetch_files]
 
 task :scrape_sessions do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
@@ -38,7 +40,7 @@ task :scrape_sessions do
       puts "from date: #{date}"
       mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
-      
+
       meeting = Scrape.scrape_session(session_url, session_path)
 
       meeting.save_to File.join(session_path, "#{meeting.id}.json")
@@ -62,7 +64,7 @@ task :scrape_vorlagen do
     id = paper.id
     paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, id)).scrape
     paper.id = id  # Restore id
-    
+
     puts "Vorlage #{paper.id} [#{paper.shortName}] #{paper.name}"
     paper.save_to File.join(DOWNLOAD_PATH, "vorlagen", "#{paper.id}.json")
     paper.files.each do |file|
@@ -90,6 +92,28 @@ task :scrape_session, :session_id do |t, args|
 end
 
 task :default => [:scrape]
+
+desc "Ensure all known PDF files are fetched, even those not included in Meetings but referenced by Papers"
+task :fetch_files do
+  path = File.join(DOWNLOAD_PATH, "files")
+  Dir.foreach path do |filename|
+    next unless filename =~ /(.+)\.json$/
+    id = $1
+
+    file = OParl::File.load_from(File.join(path, filename))
+    pdf_path = File.join(path, "#{id}.pdf")
+
+    puts "Fetch file #{id}: #{file.name}"
+    begin
+      tmp_file = Scrape.download_file(sprintf(FILE_URI, id))
+      FileUtils.mv tmp_file.path, pdf_path
+      tmp_file.close
+      tmp_file = nil
+    ensure
+      tmp_file.unlink if tmp_file.is_a? File
+    end
+  end
+end
 
 desc "Convert existing scraped pdfs to plain text files"
 task :convert do

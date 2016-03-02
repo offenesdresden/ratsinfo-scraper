@@ -13,6 +13,14 @@ require_relative 'metadata.rb'
 
 module Scrape
 
+  def self.download_file(uri)
+    archive = Tempfile.new("ratsinfo")
+    agent = Mechanize.new
+    agent.pluggable_parser.default = Mechanize::Download
+    agent.get(uri).save!(archive.path)
+    archive
+  end
+
   def self.download_zip_archive(conference_uri)
     agent = Mechanize.new
     page = agent.get(conference_uri)
@@ -41,7 +49,7 @@ module Scrape
       archive = Scrape::DocumentArchive.new(tmp_file.path, session_url)
       archive.extract(session_path)
       archive.meeting
-      
+
     rescue SignalException => e
       raise e
     rescue Exception => e
