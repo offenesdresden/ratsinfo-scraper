@@ -4,6 +4,7 @@ require 'scrape'
 require 'rake/testtask'
 require 'json'
 require 'pry'
+require 'fileutils'
 
 CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
 SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
@@ -29,7 +30,7 @@ task :scrape_sessions do
     uri = sprintf(CALENDAR_URI, date.year, date.month)
     s = Scrape::ConferenceCalendarScraper.new(uri)
     s.each do |session_id|
-      session_path = File.join(DOWNLOAD_PATH, session_id)
+      session_path = File.join(DOWNLOAD_PATH, "meetings", session_id)
       if Dir.exists?(session_path)
         puts("#skip #{session_id}")
         next
@@ -40,12 +41,17 @@ task :scrape_sessions do
       
       meeting = Scrape.scrape_session(session_url, session_path)
 
-      meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
+      meeting.save_to File.join(session_path, "#{meeting.id}.json")
       meeting.persons.each do |person|
         person.save_to File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
       end
       meeting.files.each do |file|
         file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
+
+        # Move PDF file
+        pdf_old = File.join(session_path, file.fileName)
+        pdf_new = File.join(DOWNLOAD_PATH, "files", "#{file.id}.pdf")
+        FileUtils.mv pdf_old, pdf_new
       end
     end
   end
