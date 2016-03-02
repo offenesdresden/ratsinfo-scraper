@@ -9,10 +9,10 @@ CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
 SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
-VORLAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/vo0042.php"
+VORLAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/vo0042.php?__cwpall=1"
 VORLAGE_PATH = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
 
-ANFRAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/ag0041.php"
+ANFRAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
 ANFRAGE_PATH = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
 METADATA_FILES = FileList["./data/**/metadata.json"]
