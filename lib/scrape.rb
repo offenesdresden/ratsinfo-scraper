@@ -65,19 +65,14 @@ module Scrape
 =end
       end
 
-      #write_json_file(File.join(session_path, "meeting.json"), meeting)
-      write_json_file(File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json"), meeting)
-      meeting.files.each do |file|
-        write_json_file(File.join(DOWNLOAD_PATH, "files", "#{file.id}.json"), file)
-      end
-
-      return :ok
+      meeting
     rescue SignalException => e
       raise e
     rescue Exception => e
       puts e.message
       puts e.backtrace
       FileUtils.rm_rf(session_path)
+      nil
     ensure
       tmp_file.unlink if tmp_file.is_a? File
     end

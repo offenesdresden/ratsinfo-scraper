@@ -25,6 +25,16 @@ class OParlEntity < Hashie::Trash
 
     self.type = "https://oparl.org/schema/1.0/#{self.class.name.split(/::/).last}"
   end
+
+  def save_to(path)
+    FileUtils.mkdir_p ::File.dirname(path)
+
+    json = JSON.pretty_generate(self)
+    puts "Save #{path}"
+    file = open(path, "w")
+    file.write(json)
+    file.close
+  end
 end
 
 class Meeting < OParlEntity

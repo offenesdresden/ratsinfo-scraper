@@ -17,12 +17,12 @@ ANFRAGE_PATH = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
 METADATA_FILES = FileList["./data/**/metadata.json"]
 
-directory 'data'
+directory DOWNLOAD_PATH
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
 task :scrape => [:scrape_sessions, :scrape_vorlagen, :scrape_anfragen]
 
-task :scrape_sessions => :data do
+task :scrape_sessions do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
   date_range = (Date.new(2012, 01)..Time.now.to_date).select {|d| d.day == 1}
   date_range.each do |date|
@@ -37,21 +37,38 @@ task :scrape_sessions => :data do
       puts "from date: #{date}"
       mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
-      Scrape.scrape_session(session_url, session_path)
+      
+      meeting = Scrape.scrape_session(session_url, session_path)
+
+      meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
+      meeting.files.each do |file|
+        file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
+      end
     end
   end
 end
 
-task :scrape_vorlagen => :data do
+task :scrape_vorlagen do
   Scrape::VorlagenListeScraper.new(VORLAGEN_LISTE_PATH).each do |paper|
-    paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, paper.id)).scrape
-    p :paper => paper
+    id = paper.id
+    paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, id)).scrape
+    paper.id = id  # Restore id
+    
+    puts "Vorlage #{paper.id} [#{paper.shortName}] #{paper.name}"
+    paper.save_to File.join(DOWNLOAD_PATH, "vorlagen", "#{paper.id}.json")
+    paper.files.each do |file|
+      file.save_to File.join(DOWNLOAD_PATH, "file", "#{file.id}.json")
+    end
   end
 end
 
-task :scrape_anfragen => :data do
+task :scrape_anfragen do
   Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_PATH).each do |paper|
-    p :paper => paper
+    puts "Anfrage #{paper.id} [#{paper.shortName}] #{paper.name}"
+    paper.save_to File.join(DOWNLOAD_PATH, "anfragen", "#{paper.id}.json")
+    paper.files.each do |file|
+      file.save_to File.join(DOWNLOAD_PATH, "file", "#{file.id}.json")
+    end
   end
 end
 
