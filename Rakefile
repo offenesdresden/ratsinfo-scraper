@@ -20,7 +20,7 @@ METADATA_FILES = FileList["./data/**/metadata.json"]
 directory DOWNLOAD_PATH
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape => [:scrape_sessions, :scrape_vorlagen, :scrape_anfragen]
+task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions]
 
 task :scrape_sessions do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
