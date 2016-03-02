@@ -330,7 +330,8 @@ module Scrape
       if meeting_url =~ /ksinr=(\d+)/
         meeting.id = $1
       end
-      meeting.participant = parse_participants(meeting_url)
+      meeting.persons = parse_participants(meeting_url)
+      meeting.participant = meeting.persons.map { |person| person.id }
       meeting.files = parse_files_table(document_links)
       meeting.files.each do |file|
         case file.name

@@ -53,6 +53,7 @@ class Meeting < OParlEntity
   property :participant
 
   attr_accessor :files
+  attr_accessor :persons
 
   def initialize(*a)
     super

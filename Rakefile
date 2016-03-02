@@ -41,6 +41,9 @@ task :scrape_sessions do
       meeting = Scrape.scrape_session(session_url, session_path)
 
       meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
+      meeting.persons.each do |person|
+        person.save_to File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
+      end
       meeting.files.each do |file|
         file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
       end
