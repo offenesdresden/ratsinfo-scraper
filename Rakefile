@@ -51,7 +51,6 @@ end
 
 task :scrape_anfragen => :data do
   Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_PATH).each do |paper|
-    paper = Scrape::PaperScraper.new(sprintf(ANFRAGE_PATH, paper.id)).scrape
     p :paper => paper
   end
 end
