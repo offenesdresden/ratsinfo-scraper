@@ -59,10 +59,6 @@ class Meeting < OParlEntity
 
     self.files = []
   end
-
-  def each_document(&block)
-    self.files.each &block
-  end
 end
 
 class PdfMetadata < Hashie::Trash

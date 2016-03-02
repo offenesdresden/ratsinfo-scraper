@@ -10,7 +10,6 @@ require 'date'
 require 'tempfile'
 require 'stringio'
 require_relative 'metadata.rb'
-require_relative 'tika_app.rb'
 
 module Scrape
 
@@ -41,31 +40,8 @@ module Scrape
 
       archive = Scrape::DocumentArchive.new(tmp_file.path, session_url)
       archive.extract(session_path)
-      meeting = archive.meeting
-
-      meeting.each_document do |doc|
-        pdf_path = File.join(session_path, doc.fileName)
-        next unless pdf_path.end_with?(".pdf")
-            tika = TikaApp.new(pdf_path)
-
-            xmlfile_path = pdf_path.sub('.pdf','.xml')
-            xmlfile = open(xmlfile_path, "w+")
-            xmlfile.write(tika.get_xml)
-
-=begin
-            filter = JSON.load(tika.get_metadata)
-            hs = {
-                "Content-Length" => filter["Content-Type"],
-                "Content-Type" => filter["Content-Type"],
-                "Creation-Date" => filter["Creation-Date"],
-                "Last-Modified" => filter["Last-Modified"],
-                "Author" => filter["Author"]
-                }
-            doc.pdf_metadata = hs
-=end
-      end
-
-      meeting
+      archive.meeting
+      
     rescue SignalException => e
       raise e
     rescue Exception => e
