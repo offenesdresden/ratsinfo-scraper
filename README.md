@@ -217,6 +217,11 @@ for strings or empty array, required values should be always available)
 TODO
 ----
 
+- Person
+- Body
+- Organization
+- don't download zip/pdf, just scrape all the metadata and save links
+
 - continue, where the last scan stopped
 - templates for custom tasks
 - clean up task
