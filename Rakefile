@@ -68,7 +68,7 @@ task :scrape_vorlagen do
     puts "Vorlage #{paper.id} [#{paper.shortName}] #{paper.name}"
     paper.save_to File.join(DOWNLOAD_PATH, "vorlagen", "#{paper.id}.json")
     paper.files.each do |file|
-      file.save_to File.join(DOWNLOAD_PATH, "file", "#{file.id}.json")
+      file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
     end
   end
 end
@@ -78,7 +78,7 @@ task :scrape_anfragen do
     puts "Anfrage #{paper.id} [#{paper.shortName}] #{paper.name}"
     paper.save_to File.join(DOWNLOAD_PATH, "anfragen", "#{paper.id}.json")
     paper.files.each do |file|
-      file.save_to File.join(DOWNLOAD_PATH, "file", "#{file.id}.json")
+      file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
     end
   end
 end
