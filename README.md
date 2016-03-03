@@ -26,24 +26,8 @@ Install Dependencies
     cd ratsinfo
     bundle install
 
-download Apache Tika Server 1.10 or higher
-
-    https://tika.apache.org/download.html
-
-    e.g.: http://www.eu.apache.org/dist/tika/tika-server-1.10.jar
-
-Install java 7 or higher
-
-    install depends on your system
-
 USAGE
 -----
-
-First, start Tika server:
-
-    java -jar tika-server-1.10.jar
-
-
 To start scraping use on other console:
 
     rake
@@ -52,7 +36,9 @@ This will extract all documents to the path of the environment variable DOWNLOAD
 
 To scrape an individual session for example: [http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100](http://ratsinfo.dresden.de/to0040.php?\_\_ksinr=100)
 
-    rake scrape_session[100]
+    rake testmonth
+
+To just download a tiny set of Data, only session data. Just for testing.
 
 To display all tasks use:
 

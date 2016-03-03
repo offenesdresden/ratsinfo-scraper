@@ -18,18 +18,27 @@ ANFRAGE_URI = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
 FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
 
-METADATA_FILES = FileList["./data/**/metadata.json"]
-
 directory DOWNLOAD_PATH
 
-task :default => [:scrape]
+scrape_start_date = Date.new(2009,8)
+scrape_end_date = Time.now.to_date
+
+task :default => [:scrape_sessions]
+
+desc "Scrape Documents from http://ratsinfo.dresden.de with a minmal timerange"
+task :testmonth do
+  scrape_start_date = Date.new(2009, 8)
+  scrape_end_date  = Date.new(2009, 8)
+  Rake::Task["scrape_sessions"].invoke
+end
+
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
 task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions, :fetch_meetings_anfragen, :fetch_files]
 
 task :scrape_sessions do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
-  date_range = (Date.new(2012, 01)..Time.now.to_date).select {|d| d.day == 1}
+  date_range = (scrape_start_date..scrape_end_date).select {|d| d.day == 1}
   date_range.each do |date|
     uri = sprintf(CALENDAR_URI, date.year, date.month)
     s = Scrape::ConferenceCalendarScraper.new(uri)
@@ -85,13 +94,6 @@ task :scrape_anfragen do
   end
 end
 
-desc "Scrape Documents of Session with session_id"
-task :scrape_session, :session_id do |t, args|
-  session_path = File.join(DOWNLOAD_PATH, args.session_id)
-  mkdir_p(session_path)
-  session_url = sprintf(SESSION_URI, args.session_id)
-  Scrape.scrape_session(session_url, session_path)
-end
 
 desc "Durchsucht alle Meetings nach weiteren Anfragen"
 task :fetch_meetings_anfragen do
@@ -146,28 +148,6 @@ task :fetch_files do
       file.sha1Checksum = $1
     end
     file.save_to json_path
-  end
-end
-
-desc "Convert existing scraped pdfs to plain text files"
-task :convert do
-  METADATA_FILES.each do |file_name|
-    directory = File.dirname(file_name)
-    metadata = Metadata.new(JSON.load(File.open(file_name)))
-    metadata.each_document do |doc|
-      pdf_path = File.join(directory, doc.file_name)
-      next unless pdf_path.end_with?(".pdf")
-
-      tika = TikaApp.new(pdf_path)
-      xmlfile_path = pdf_path.sub('.pdf','.xml')
-      xmlfile = open(xmlfile_path, "w+")
-      xmlfile.write(tika.get_xml)
-
-    end
-
-    file = File.open(file_name, "w")
-    json = JSON.pretty_generate(metadata)
-    file.write(json)
   end
 end
 
