@@ -10,11 +10,11 @@ CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
 SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
-VORLAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/vo0042.php?__cwpall=1"
-VORLAGE_PATH = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
+VORLAGEN_LISTE_URI = "http://ratsinfo.dresden.de/vo0042.php?__cwpall=1"
+VORLAGE_URI = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
 
-ANFRAGEN_LISTE_PATH = "http://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
-ANFRAGE_PATH = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
+ANFRAGEN_LISTE_URI = "http://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
+ANFRAGE_URI = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
 FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
 
@@ -62,9 +62,9 @@ task :scrape_sessions do
 end
 
 task :scrape_vorlagen do
-  Scrape::VorlagenListeScraper.new(VORLAGEN_LISTE_PATH).each do |paper|
+  Scrape::VorlagenListeScraper.new(VORLAGEN_LISTE_URI).each do |paper|
     id = paper.id
-    paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, id)).scrape
+    paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
     paper.id = id  # Restore id
 
     puts "Vorlage #{paper.id} [#{paper.shortName}] #{paper.name}"
@@ -76,7 +76,7 @@ task :scrape_vorlagen do
 end
 
 task :scrape_anfragen do
-  Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_PATH).each do |paper|
+  Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_URI).each do |paper|
     puts "Anfrage #{paper.id} [#{paper.shortName}] #{paper.name}"
     paper.save_to File.join(DOWNLOAD_PATH, "anfragen", "#{paper.id}.json")
     paper.files.each do |file|
@@ -103,7 +103,7 @@ task :fetch_meetings_anfragen do
       paper_path = File.join(DOWNLOAD_PATH, "vorlagen", "#{id}.json")
       next if File.exist? paper_path
 
-      paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, id)).scrape
+      paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
       paper.id = id  # Restore id
 
       puts "Vorlage #{paper.id} [#{paper.shortName}] #{paper.name}"
