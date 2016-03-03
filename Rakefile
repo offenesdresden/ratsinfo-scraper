@@ -56,7 +56,10 @@ task :scrape_sessions do
 
       meeting.save_to File.join(session_path, "#{meeting.id}.json")
       meeting.persons.each do |person|
-        person.save_to File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
+        persons_path = File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
+        if not File.exists?(persons_path)
+            person.save_to persons_path
+        end
       end
       meeting.files.each do |file|
         file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
