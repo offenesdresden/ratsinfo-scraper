@@ -104,16 +104,18 @@ task :fetch_files do
     file = OParl::File.load_from(json_path)
     file.downloadUrl = sprintf(FILE_URI, id)
 
-    puts "Fetch file #{id}: #{file.name}"
     pdf_path = File.join(path, "#{id}.pdf")
-    begin
-      tmp_file = Scrape.download_file(file.downloadUrl)
-      FileUtils.mv tmp_file.path, pdf_path
+    unless File.exist? pdf_path
+      puts "Fetch file #{id}: #{file.name}"
+      begin
+        tmp_file = Scrape.download_file(file.downloadUrl)
+        FileUtils.mv tmp_file.path, pdf_path
 
-      tmp_file.close
-      tmp_file = nil
-    ensure
-      tmp_file.unlink if tmp_file.is_a? File
+        tmp_file.close
+        tmp_file = nil
+      ensure
+        tmp_file.unlink if tmp_file.is_a? File
+      end
     end
 
     file.mimeType = "application/pdf"
