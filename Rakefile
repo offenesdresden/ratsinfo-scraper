@@ -22,8 +22,10 @@ METADATA_FILES = FileList["./data/**/metadata.json"]
 
 directory DOWNLOAD_PATH
 
+task :default => [:scrape]
+
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions, :fetch_files]
+task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions, :fetch_meetings_anfragen, :fetch_files]
 
 task :scrape_sessions do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)
@@ -91,7 +93,27 @@ task :scrape_session, :session_id do |t, args|
   Scrape.scrape_session(session_url, session_path)
 end
 
-task :default => [:scrape]
+desc "Durchsucht alle Meetings nach weiteren Anfragen"
+task :fetch_meetings_anfragen do
+  Dir.glob(File.join(DOWNLOAD_PATH, "meetings", "*.json")) do |filename|
+    meeting = OParl::Meeting.load_from(filename)
+    meeting.agendaItem.each do |agenda_item|
+      id = agenda_item.consultation
+      next unless id
+      paper_path = File.join(DOWNLOAD_PATH, "vorlagen", "#{id}.json")
+      next if File.exist? paper_path
+
+      paper = Scrape::PaperScraper.new(sprintf(VORLAGE_PATH, id)).scrape
+      paper.id = id  # Restore id
+
+      puts "Vorlage #{paper.id} [#{paper.shortName}] #{paper.name}"
+      paper.save_to paper_path
+      paper.files.each do |file|
+        file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
+      end
+    end
+  end
+end
 
 desc "Ensure all known PDF files are fetched, even those not included in Meetings but referenced by Papers"
 task :fetch_files do

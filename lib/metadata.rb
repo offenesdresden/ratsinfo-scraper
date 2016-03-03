@@ -65,6 +65,12 @@ class Meeting < OParlEntity
 
     self.files = []
   end
+
+  def self.load_from(path)
+    this = super(path)
+    this.agendaItem = this.agendaItem.map { |v| AgendaItem.new(v) }
+    this
+  end
 end
 
 class PdfMetadata < Hashie::Trash
