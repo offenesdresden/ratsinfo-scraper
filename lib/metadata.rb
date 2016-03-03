@@ -120,6 +120,10 @@ end
 
 class File < OParlEntity
   property :fileName
+  property :downloadUrl
+  property :sha1Checksum
+  property :size
+  property :mimeType
 end
 
 class Person < OParlEntity

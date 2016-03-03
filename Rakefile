@@ -100,18 +100,28 @@ task :fetch_files do
     next unless filename =~ /(.+)\.json$/
     id = $1
 
-    file = OParl::File.load_from(File.join(path, filename))
-    pdf_path = File.join(path, "#{id}.pdf")
+    json_path = File.join(path, filename)
+    file = OParl::File.load_from(json_path)
+    file.downloadUrl = sprintf(FILE_URI, id)
 
     puts "Fetch file #{id}: #{file.name}"
+    pdf_path = File.join(path, "#{id}.pdf")
     begin
-      tmp_file = Scrape.download_file(sprintf(FILE_URI, id))
+      tmp_file = Scrape.download_file(file.downloadUrl)
       FileUtils.mv tmp_file.path, pdf_path
+
       tmp_file.close
       tmp_file = nil
     ensure
       tmp_file.unlink if tmp_file.is_a? File
     end
+
+    file.mimeType = "application/pdf"
+    file.size = File.size(pdf_path)
+    if `sha1sum #{pdf_path}` =~ /([0-9a-f]+)/
+      file.sha1Checksum = $1
+    end
+    file.save_to json_path
   end
 end
 
