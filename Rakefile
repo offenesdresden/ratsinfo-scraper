@@ -54,7 +54,7 @@ task :scrape_sessions do
 
       meeting = Scrape.scrape_session(session_url, session_path)
 
-      meeting.save_to File.join(session_path, "#{meeting.id}.json")
+      meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
       meeting.persons.each do |person|
         persons_path = File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
         if not File.exists?(persons_path)
