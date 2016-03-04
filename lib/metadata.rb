@@ -122,6 +122,8 @@ class AgendaItem < OParlEntity
   property :resolutionFile
   property :resolutionText
   property :auxiliaryFile
+
+  attr_accessor :files
 end
 
 class File < OParlEntity

@@ -52,7 +52,9 @@ task :scrape_sessions do
       mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
 
-      meeting = Scrape.scrape_session(session_url, session_path)
+      meeting = Scrape::SessionScraper.new(session_url).scrape
+      meeting.id = session_id
+      pp meeting
 
       meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
       meeting.persons.each do |person|
@@ -63,11 +65,6 @@ task :scrape_sessions do
       end
       meeting.files.each do |file|
         file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
-
-        # Move PDF file
-        pdf_old = File.join(session_path, file.fileName)
-        pdf_new = File.join(DOWNLOAD_PATH, "files", "#{file.id}.pdf")
-        FileUtils.mv pdf_old, pdf_new
       end
     end
   end
