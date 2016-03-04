@@ -62,16 +62,6 @@ module Scrape
     end
   end
 
-  def self.write_json_file(path, content)
-    FileUtils.mkdir_p File.dirname(path)
-
-    json = JSON.pretty_generate(content)
-    file = open(path, "w+")
-    file.write(json)
-    file.close
-  end
-
-
 
   class ::String
     # remove in addition to builtin strip also Non-Breaking Space
