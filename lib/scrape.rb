@@ -37,7 +37,6 @@ module Scrape
     vorgang
   end
 
-  # TODO: unify into using this one
   def self.parse_docbox(container)
     files = []
     container.css('.smcdocname a').each do |row|
