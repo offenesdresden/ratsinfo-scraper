@@ -16,6 +16,8 @@ VORLAGE_URI = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
 ANFRAGEN_LISTE_URI = "http://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
 ANFRAGE_URI = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
+GREMIEN_LISTE_URI = "http://ratsinfo.dresden.de/gr0040.php?__cwpall=1&"
+
 FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
 
 directory DOWNLOAD_PATH
@@ -34,7 +36,20 @@ end
 
 
 desc "Scrape Documents from http://ratsinfo.dresden.de"
-task :scrape => [:scrape_anfragen, :scrape_vorlagen, :scrape_sessions, :fetch_meetings_anfragen, :fetch_files]
+task :scrape => [
+       :scrape_gremien,
+       :scrape_anfragen, :scrape_vorlagen,
+       :scrape_sessions,
+       :fetch_meetings_anfragen,
+       :fetch_files
+     ]
+
+task :scrape_gremien do
+  Scrape::GremienListeScraper.new(GREMIEN_LISTE_URI).each do |organization|
+    puts "[#{organization.id}] #{organization.name}"
+    organization.save_to File.join(DOWNLOAD_PATH, "gremien", "#{organization.id}.json")
+  end
+end
 
 task :scrape_sessions do
   raise "download path '#{DOWNLOAD_PATH}' does not exists!" unless Dir.exists?(DOWNLOAD_PATH)

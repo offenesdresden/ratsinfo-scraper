@@ -42,6 +42,9 @@ class OParlEntity < Hashie::Trash
   end
 end
 
+class Organization < OParlEntity
+end
+
 class Meeting < OParlEntity
   property :session_url
   property :name

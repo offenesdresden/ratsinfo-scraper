@@ -66,8 +66,6 @@ TODO
 ----
 
 - Person
-- Body
-- Organization
 
 - continue, where the last scan stopped
 - templates for custom tasks
