@@ -18,6 +18,7 @@ class String
 end
 
 require_relative "scrape/gremien_liste"
+require_relative "scrape/person"
 require_relative "scrape/conference_calendar"
 require_relative "scrape/session"
 require_relative "scrape/anfragen_liste"

@@ -138,6 +138,16 @@ class File < OParlEntity
 end
 
 class Person < OParlEntity
+  property :membership
+end
+
+class Membership < OParlEntity
+  property :organization
+  property :role
+  property :votingRight
+  property :startDate
+  property :endDate
+  property :onBehalfOf
 end
 
 class Paper < OParlEntity

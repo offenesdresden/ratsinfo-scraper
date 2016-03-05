@@ -18,6 +18,8 @@ ANFRAGE_URI = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
 GREMIEN_LISTE_URI = "http://ratsinfo.dresden.de/gr0040.php?__cwpall=1&"
 
+PERSON_URI = "http://ratsinfo.dresden.de/kp0050.php?__cwpall=1&__kpenr=%d"
+
 FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
 
 directory DOWNLOAD_PATH
@@ -38,6 +40,7 @@ end
 desc "Scrape Documents from http://ratsinfo.dresden.de"
 task :scrape => [
        :scrape_gremien,
+       :scrape_people,
        :scrape_anfragen, :scrape_vorlagen,
        :scrape_sessions,
        :fetch_meetings_anfragen,
@@ -48,6 +51,13 @@ task :scrape_gremien do
   Scrape::GremienListeScraper.new(GREMIEN_LISTE_URI).each do |organization|
     puts "[#{organization.id}] #{organization.name}"
     organization.save_to File.join(DOWNLOAD_PATH, "gremien", "#{organization.id}.json")
+  end
+end
+
+task :scrape_people do
+  Scrape::PeopleScraper.new(PERSON_URI).each do |person|
+    puts "[#{person.id}] #{person.name}"
+    person.save_to File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
   end
 end
 
