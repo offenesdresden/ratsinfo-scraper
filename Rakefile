@@ -68,18 +68,10 @@ task :scrape_sessions do
     uri = sprintf(CALENDAR_URI, date.year, date.month)
     s = Scrape::ConferenceCalendarScraper.new(uri)
     s.each do |session_id|
-      session_path = File.join(DOWNLOAD_PATH, "meetings", session_id)
-      if Dir.exists?(session_path)
-        puts("#skip #{session_id}")
-        next
-      end
-      puts "from date: #{date}"
-      mkdir_p(session_path)
       session_url = sprintf(SESSION_URI, session_id)
-
       meeting = Scrape::SessionScraper.new(session_url).scrape
       meeting.id = session_id
-      pp meeting
+      puts "[#{meeting.id}] #{meeting.name}"
 
       meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
       meeting.persons.each do |person|
