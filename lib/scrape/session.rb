@@ -41,7 +41,6 @@ module Scrape
       agenda.each do |item|
         meeting.files.concat(item.files)
       end
-      meeting.downloaded_at = Time.now
       meeting
 
       meeting.persons = parse_participants

@@ -73,7 +73,6 @@ class Meeting < OParlEntity
   property :start, with: Proc.new { |v| Time.parse(v) }
   property :end, with: Proc.new { |v| Time.parse(v) }
   property :locality
-  property :downloaded_at, with: Proc.new { |v| Time.parse(v) }
   property :agendaItem, with: Proc.new{ |ary| ary.map { |v| AgendaItem.new(v) } }
   property :invitation
   property :resultsProtocol
