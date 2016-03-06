@@ -26,9 +26,31 @@ class OParlEntity < Hashie::Trash
     self.type = "https://oparl.org/schema/1.0/#{self.class.name.split(/::/).last}"
   end
 
+  def merge_old_from!(path)
+    old = self.class.load_from(path)
+    merge! old do |key, value, old_value|
+      if value.nil?
+        # Overwrite with old value
+        old_value
+      elsif not old_value.nil?
+        # Old was nil
+        value
+      elsif old_value == value
+        value
+      else
+        puts "Overwriting #{key}: #{old_value.inspect} to #{value.inspect}"
+        value
+      end
+    end
+  end
+
   def save_to(path)
     FileUtils.mkdir_p ::File.dirname(path)
 
+    if ::File.exist? path
+      # Retain old values
+      merge_old_from! path
+    end
     json = JSON.pretty_generate(self)
     puts "Save #{path}"
     file = open(path, "w")

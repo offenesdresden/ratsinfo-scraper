@@ -84,9 +84,7 @@ task :scrape_sessions do
       meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
       meeting.persons.each do |person|
         persons_path = File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
-        if not File.exists?(persons_path)
-            person.save_to persons_path
-        end
+        person.save_to persons_path
       end
       meeting.files.each do |file|
         file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
@@ -128,7 +126,6 @@ task :fetch_meetings_anfragen do
       id = agenda_item.consultation
       next unless id
       paper_path = File.join(DOWNLOAD_PATH, "vorlagen", "#{id}.json")
-      next if File.exist? paper_path
 
       paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
       paper.id = id  # Restore id
