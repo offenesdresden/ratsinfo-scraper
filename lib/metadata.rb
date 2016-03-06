@@ -52,7 +52,6 @@ class OParlEntity < Hashie::Trash
       merge_old_from! path
     end
     json = JSON.pretty_generate(self)
-    puts "Save #{path}"
     file = open(path, "w")
     file.write(json)
     file.close
