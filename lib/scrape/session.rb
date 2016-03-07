@@ -14,8 +14,7 @@ module Scrape
         { :shortName => vorgang['Sitzung'],
           :organization => [vorgang['Gremium']],
           :locality => vorgang['Raum'],
-          :name => vorgang['Bezeichnung'],
-          :downloaded_at => Time.new.iso8601
+          :name => vorgang['Bezeichnung']
         })
       date = vorgang['Datum']
       (start_time, end_time) = vorgang['Zeit'].split("-")
