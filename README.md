@@ -57,9 +57,7 @@ The download directory will have the following scheme:
 
 Deviations from the OParl spec:
 
-* Numerical `id` everywhere
-* `Meeting.organization` references by an `Organization`s *name*
-* `AgendaItem.consultation` actually references a `Paper.id`
+* Numerical `id` everywhere, because we don't yet serve the data on HTTP URIs
 
 
 TODO
