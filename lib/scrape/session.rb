@@ -74,7 +74,9 @@ module Scrape
         # Vorlage/Paper.id
         voname = row.css('.smc_field_voname')
         if not voname.empty? and voname.attr('href').to_s =~ /kvonr=(\d+)/
-          item.consultation = $1
+          item.consultation = OParl::Consultation.new(
+            { :parentID => $1
+            })
         end
 
         # AgendaItem files
