@@ -93,7 +93,21 @@ class Meeting < OParlEntity
 
   def self.load_from(path)
     this = super(path)
-    this.agendaItem = this.agendaItem.map { |v| AgendaItem.new(v) }
+    this.agendaItem = this.agendaItem.map { |v|
+      consultation = v['consultation']
+      v.delete 'consultation'
+
+      item = AgendaItem.new(v)
+      if consultation.is_a? String
+        # Handle plain paper id from when we didn't store complex Consultation in AgendaItem
+        item.consultation = Consultation.new(
+          { :parentID => consultation
+          })
+      elsif consultation.is_a? Hash
+        item.consultation = Consultation.new(consultation)
+      end
+      item
+    }
     this
   end
 end
