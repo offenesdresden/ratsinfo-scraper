@@ -1,6 +1,15 @@
 module Scrape
 
-  # TODO: resolve organization, perhaps in another Rake step?
+  def self.get_organization_by_name(name)
+    Dir.glob(File.join(DOWNLOAD_PATH, "gremien", "*.json")) do |file_path|
+      organization = OParl::Organization.load_from(file_path)
+      if organization.name == name
+        return organization
+      end
+    end
+    nil
+  end
+
   class SessionScraper
     def initialize(scrape_url)
       @scrape_url = scrape_url
@@ -12,10 +21,15 @@ module Scrape
       vorgang = Scrape.parse_vorgang(doc.css('#smctablevorgang'))
       meeting = OParl::Meeting.new(
         { :shortName => vorgang['Sitzung'],
-          :organization => [vorgang['Gremium']],
           :locality => vorgang['Raum'],
           :name => vorgang['Bezeichnung']
         })
+      if (organization = Scrape.get_organization_by_name(vorgang['Gremium']))
+        meeting.organization = [organization.id]
+      else
+        puts "No such organization: #{vorgang['Gremium']}"
+      end
+
       date = vorgang['Datum']
       (start_time, end_time) = vorgang['Zeit'].split("-")
       meeting.start = Time.parse(date + " " + start_time).iso8601
