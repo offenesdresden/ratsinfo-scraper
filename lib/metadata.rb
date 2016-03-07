@@ -173,6 +173,7 @@ class Membership < OParlEntity
 end
 
 class Paper < OParlEntity
+  property :reference
   property :publishedDate
   property :paperType
 

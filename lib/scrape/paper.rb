@@ -13,6 +13,7 @@ module Scrape
       paper = OParl::Paper.new(
         { :name => vorgang['Betreff'],
           :shortName => vorgang['Name'],
+          :reference => vorgang['Name'],
           :publishedDate => Date.parse(vorgang['Datum']).iso8601,
           :paperType => vorgang['Art']
         })
