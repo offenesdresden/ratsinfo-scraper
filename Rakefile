@@ -115,8 +115,9 @@ task :fetch_meetings_anfragen do
   Dir.glob(File.join(DOWNLOAD_PATH, "meetings", "*.json")) do |filename|
     meeting = OParl::Meeting.load_from(filename)
     meeting.agendaItem.each do |agenda_item|
-      id = agenda_item.consultation
-      next unless id
+      consultation = agenda_item.consultation
+      next unless consultation
+      id = consultation.parentID
       paper_path = File.join(DOWNLOAD_PATH, "vorlagen", "#{id}.json")
 
       paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
