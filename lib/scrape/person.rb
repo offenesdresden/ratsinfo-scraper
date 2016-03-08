@@ -17,7 +17,7 @@ module Scrape
         @i += 1
         person = PersonScraper.new(sprintf(@uri_template, @i)).scrape
         if person
-          person.id = @i
+          person.id = @i.to_s
           yield person
           @gap = 0
         else
