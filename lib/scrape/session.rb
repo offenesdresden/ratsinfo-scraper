@@ -35,7 +35,7 @@ module Scrape
       meeting.start = Time.parse(date + " " + start_time).iso8601
       meeting.end = Time.parse(date + " " + end_time).iso8601 if end_time
 
-      meeting.files = Scrape.parse_docbox(doc.css('.smcdocbox[1]'))
+      meeting.files = Scrape.parse_docbox(doc.css('.smcdocbox')[0])
       meeting.files.each do |file|
         if file.name =~ /einladung/i and not meeting.invitation
           meeting.invitation = file.id
