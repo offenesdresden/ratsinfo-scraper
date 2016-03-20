@@ -1,3 +1,8 @@
+# coding: utf-8
+
+require 'uri'
+
+
 module Scrape
 
   # Try all person ids until no valid occurs for MAX_GAP consecutive scrapes
@@ -41,7 +46,10 @@ module Scrape
           { :name => name
           })
         person.membership = parse_memberships(doc.css('#smc_page_kp0050_contenttable1 tbody tr'))
+        scrape_info(@scrape_url.sub(/kp0050/, "kp0051"), person)
         person
+      else
+        nil
       end
     end
 
@@ -64,6 +72,55 @@ module Scrape
         end
         m
       end
+    end
+
+    def scrape_info(scrape_url, person)
+      doc = Nokogiri::HTML(open(scrape_url))
+
+      # Scrape keys/values
+      doc.css('#smctablevorgang tbody tr').each do |row|
+        k = row.css('.smctablehead').text().to_s.sub(/:$/, "")
+        v = row.css('.smctablecontent').text().to_s
+
+        case k
+        when "E-Mail"
+          person.email = [] unless person.email
+          person.email.push(v)
+        when "Mitgliedschaft"
+          person.status = v
+        when "Straße"
+          person.streetAddress = v
+        when "Ort"
+          if v =~ /^(\d{5}) ([\S\-]+) \(?OT ([\S\-]+)\)?$/
+            # "01465 Dresden OT Schönborn"
+            # "01156 Dresden (OT Gompitz)"
+            person.postalCode = $1
+            person.locality = $2
+            person.subLocality = $3
+          elsif v =~ /^(\d{5}) ([\S\-]+)$/
+            # "01069 Dresden"
+            person.postalCode = $1
+            person.locality = $2
+          elsif v =~ /^([\S\-]+)$/
+            # "Dresden"
+            person.locality = v
+          else
+            puts "Unerwarteter Ort: #{v}"
+          end
+        when /^Telefon/, /^Mobil/
+          person.phone = [] unless person.phone
+          person.phone.push(v)
+        else
+          puts "Unerwartete Info: #{k}=#{v}"
+        end
+      end
+
+      # Scrape picture
+      doc.css('img.smcimgperson').each do |img|
+        person.photo = URI.join(scrape_url, img.attr('src').to_s).to_s
+      end
+
+      person
     end
   end
 

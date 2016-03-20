@@ -175,6 +175,17 @@ end
 
 class Person < OParlEntity
   property :membership
+
+  property :email
+  property :status
+  property :streetAddress
+  property :postalCode
+  property :locality
+  property :subLocality
+  property :phone
+
+  # Our invention
+  property :photo
 end
 
 class Membership < OParlEntity
