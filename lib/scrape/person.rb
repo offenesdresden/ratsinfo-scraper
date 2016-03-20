@@ -93,7 +93,7 @@ module Scrape
           end
         when "Mitgliedschaft"
           person.status = [] unless person.status
-          person.status.push(v)
+          person.status.push(v.sub(/^\((.+)\)$/, '\1'))
         when "Straße"
           person.streetAddress = v
         when "Ort"
