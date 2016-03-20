@@ -92,7 +92,8 @@ module Scrape
             end
           end
         when "Mitgliedschaft"
-          person.status = v
+          person.status = [] unless person.status
+          person.status.push(v)
         when "Straße"
           person.streetAddress = v
         when "Ort"
