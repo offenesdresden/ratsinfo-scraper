@@ -59,12 +59,3 @@ Deviations from the OParl spec:
 
 * Numerical `id` everywhere, because we don't yet serve the data on HTTP URIs
 
-
-TODO
-----
-
-- Person
-
-- continue, where the last scan stopped
-- templates for custom tasks
-- clean up task
