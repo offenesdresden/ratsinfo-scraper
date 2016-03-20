@@ -115,6 +115,8 @@ module Scrape
         when /^Telefon/, /^Mobil/
           person.phone = [] unless person.phone
           person.phone.push(v)
+        when "Beruf"
+          person.life = v
         else
           puts "Unerwartete Info: #{k}=#{v}"
         end

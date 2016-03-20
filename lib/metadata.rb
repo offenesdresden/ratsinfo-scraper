@@ -183,6 +183,7 @@ class Person < OParlEntity
   property :locality
   property :subLocality
   property :phone
+  property :life
 
   # Our invention
   property :photo
