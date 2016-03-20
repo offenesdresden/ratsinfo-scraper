@@ -85,7 +85,12 @@ module Scrape
         case k
         when "E-Mail"
           person.email = [] unless person.email
-          person.email.push(v)
+          v.split(/[,;\/]/).each do |vs|
+            vs = vs.strip_whitespace
+            unless vs.empty?
+              person.email.push(vs)
+            end
+          end
         when "Mitgliedschaft"
           person.status = v
         when "Straße"
