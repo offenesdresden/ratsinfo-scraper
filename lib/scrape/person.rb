@@ -96,7 +96,7 @@ module Scrape
         when "Straße"
           person.streetAddress = v
         when "Ort"
-          if v =~ /^(\d{5}) ([\S\-]+) \(?OT ([\S\-]+)\)?$/
+          if v =~ /^(\d{5}) ([\S\-]+) \(?OT ([\S\-]+?)\)?$/
             # "01465 Dresden OT Schönborn"
             # "01156 Dresden (OT Gompitz)"
             person.postalCode = $1
