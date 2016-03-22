@@ -36,20 +36,7 @@ module Scrape
     private
 
     def parse_files(doc)
-      files = []
-      doc.css('table').select do |table|
-        table.attr('summary').to_s == "Tabelle enthält zum aufgerufenen Element zugeordnete Dokumente und damit verbundene Aktionen."
-      end.each do |table|
-        table.css('.smcdocname a').each do |row|
-          if row.attr('href').to_s =~ /id=(\d+)/
-            files << OParl::File.new(
-              { :name => row.attr('title').to_s.strip_whitespace,
-                :id => $1
-              })
-          end
-        end
-      end
-      files
+      Scrape.parse_docbox(doc.css('.smcdocbox')[0])
     end
 
     def parse_consultations(doc)
