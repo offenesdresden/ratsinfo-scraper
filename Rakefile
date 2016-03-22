@@ -5,6 +5,7 @@ require 'rake/testtask'
 require 'json'
 require 'pry'
 require 'fileutils'
+require 'parallel'
 
 CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
 SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
@@ -21,6 +22,8 @@ GREMIEN_LISTE_URI = "http://ratsinfo.dresden.de/gr0040.php?__cwpall=1&"
 PERSON_URI = "http://ratsinfo.dresden.de/kp0050.php?__cwpall=1&__kpenr=%d"
 
 FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
+
+CONCURRENCY = 16
 
 directory DOWNLOAD_PATH
 
@@ -67,7 +70,7 @@ task :scrape_sessions do
   date_range.each do |date|
     uri = sprintf(CALENDAR_URI, date.year, date.month)
     s = Scrape::ConferenceCalendarScraper.new(uri)
-    s.each do |session_id|
+    Parallel.each(s, :in_processes => CONCURRENCY) do |session_id|
       session_url = sprintf(SESSION_URI, session_id)
       meeting = Scrape::SessionScraper.new(session_url).scrape
       meeting.id = session_id
@@ -86,7 +89,7 @@ task :scrape_sessions do
 end
 
 task :scrape_vorlagen do
-  Scrape::VorlagenListeScraper.new(VORLAGEN_LISTE_URI).each do |paper|
+  Parallel.each(Scrape::VorlagenListeScraper.new(VORLAGEN_LISTE_URI), :in_processes => CONCURRENCY) do |paper|
     id = paper.id
     paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
     paper.id = id  # Restore id
@@ -114,7 +117,7 @@ desc "Durchsucht alle Meetings nach weiteren Anfragen"
 task :fetch_meetings_anfragen do
   Dir.glob(File.join(DOWNLOAD_PATH, "meetings", "*.json")) do |filename|
     meeting = OParl::Meeting.load_from(filename)
-    meeting.agendaItem.each do |agenda_item|
+    Parallel.each(meeting.agendaItem, :in_processes => CONCURRENCY) do |agenda_item|
       consultation = agenda_item.consultation
       next unless consultation
       id = consultation.parentID
