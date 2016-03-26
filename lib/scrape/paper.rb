@@ -36,7 +36,11 @@ module Scrape
     private
 
     def parse_files(doc)
-      Scrape.parse_docbox(doc.css('.smcdocbox')[0])
+      # TODO: what if there are files but only in agenda items? then
+      # they'll end up having .smcdocbox[0], which is not what we want
+      # here!
+      docbox = doc.css('.smcdocbox')[0]
+      docbox ? Scrape.parse_docbox(docbox) : []
     end
 
     def parse_consultations(doc)
