@@ -14,9 +14,10 @@ module Scrape
         { :name => vorgang['Betreff'],
           :shortName => vorgang['Name'],
           :reference => vorgang['Name'],
-          :publishedDate => Date.parse(vorgang['Datum']).iso8601,
           :paperType => vorgang['Art']
         })
+      date_str = vorgang['Datum']
+      paper.publishedDate = Date.parse(date_str).iso8601 if date_str
 
       paper.files = parse_files(doc)
       paper.files.each do |file|
