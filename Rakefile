@@ -151,17 +151,21 @@ task :fetch_files do
       puts "Fetch file #{id}: #{file.name}"
       begin
         tmp_file = Scrape.download_file(file.downloadUrl)
+        file.fileName = tmp_file.file_name
+        file.mimeType = tmp_file.mime_type
+        file.size = tmp_file.size
         FileUtils.mv tmp_file.path, pdf_path
-
         tmp_file.close
         tmp_file = nil
+      rescue
+        puts "Error downloading #{file.downloadUrl}"
+        puts $!
+        next
       ensure
         tmp_file.unlink if tmp_file.is_a? File
       end
     end
 
-    file.mimeType = "application/pdf"
-    file.size = File.size(pdf_path)
     if `sha1sum #{pdf_path}` =~ /([0-9a-f]+)/
       file.sha1Checksum = $1
     end

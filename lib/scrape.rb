@@ -25,13 +25,42 @@ require_relative "scrape/anfragen_liste"
 require_relative "scrape/vorlagen_liste"
 require_relative "scrape/paper"
 
-module Scrape
-  def self.download_file(uri)
-    archive = Tempfile.new("ratsinfo")
+
+class Download
+  def initialize(uri)
     agent = Mechanize.new
     agent.pluggable_parser.default = Mechanize::Download
-    agent.get(uri).save!(archive.path)
-    archive
+    @page = agent.get(uri)
+    @archive = Tempfile.new("ratsinfo")
+    @page.save!(path)
+  end
+
+  def close
+    @archive.close
+  end
+
+  def path
+    @archive.path
+  end
+
+  def file_name
+    if @page['content-disposition'] =~ /filename="(.+?)"/
+      $1
+    end
+  end
+
+  def mime_type
+    @page['content-type']
+  end
+
+  def size
+    @page['content-length'].to_i or File.size(path)
+  end
+end
+
+module Scrape
+  def self.download_file(uri)
+    Download::new(uri)
   end
 
   def self.parse_vorgang(container)
