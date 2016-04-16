@@ -188,9 +188,14 @@ task :pdftotext do
 
     if file.mimeType == 'application/pdf'
       pdf_path = File.join(path, "#{id}.pdf")
-      puts pdf_path
-      output = `pdftotext -enc UTF-8 #{pdf_path}`.chomp
-      puts output unless output.empty?
+      txt_path = File.join(path, "#{id}.txt")
+
+      # Only if .pdf newer than .txt
+      if !File.exist?(txt_path) or File.new(pdf_path).mtime > File.new(txt_path).mtime
+        puts pdf_path
+        output = `pdftotext -enc UTF-8 #{pdf_path}`.chomp
+        puts output unless output.empty?
+      end
     end
   end
 end
