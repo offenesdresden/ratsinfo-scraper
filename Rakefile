@@ -173,6 +173,24 @@ task :fetch_files do
   end
 end
 
+desc "Create plain-text versions of all PDF files, but no other mime-types"
+task :pdftotext do
+  path = File.join(DOWNLOAD_PATH, "files")
+  Dir.foreach path do |filename|
+    next unless filename =~ /(.+)\.json$/
+    id = $1
+    json_path = File.join(path, filename)
+    file = OParl::File.load_from(json_path)
+
+    if file.mimeType == 'application/pdf'
+      pdf_path = File.join(path, "#{id}.pdf")
+      puts pdf_path
+      output = `pdftotext -enc UTF-8 #{pdf_path}`.chomp
+      puts output unless output.empty?
+    end
+  end
+end
+
 Rake::TestTask.new do |t|
   t.libs << "test"
   t.test_files = FileList['test/**/*_test.rb']
