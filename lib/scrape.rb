@@ -45,7 +45,7 @@ class Download
 
   def file_name
     if @page['content-disposition'] =~ /filename="(.+?)"/
-      $1
+      $1.encode(Encoding::UTF_8, Encoding::ISO_8859_1, { :invalid => :replace })
     end
   end
 
