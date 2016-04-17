@@ -147,10 +147,10 @@ task :fetch_files do
     file.downloadUrl = sprintf(FILE_URI, id)
 
     pdf_path = File.join(path, "#{id}.pdf")
-    unless File.exist? pdf_path
-      # We do want to download existing files to monitor for updates,
-      # but not at once. Distribute over 1 month:
-      next if id.to_i % 29 != Time.new.day - 1
+    # We do want to download existing files to monitor for updates,
+    # but not at once. Distribute over 1 month:
+    if File.exist? pdf_path and id.to_i % 29 != Time.new.day - 1
+      next
     end
 
     puts "Fetch file #{id}: #{file.name}"
