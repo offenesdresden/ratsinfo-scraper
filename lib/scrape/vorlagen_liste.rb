@@ -8,7 +8,7 @@ module Scrape
     end
 
     def each(&block)
-      doc = Nokogiri::HTML(open(@scrape_url))
+      doc = Scrape.download_doc(@scrape_url)
       doc.css("table.smccontenttable tr").each do |row|
         paper = parse_row(row)
         yield paper if paper

@@ -9,7 +9,7 @@ module Scrape
     end
 
     def each(&block)
-      doc = Nokogiri::HTML(open(@scrape_url))
+      doc = Scrape.download_doc(@scrape_url)
       doc.css("table.smccontenttable tr").each do |row|
         conference_id = parse_row(row)
         yield conference_id unless conference_id.nil?

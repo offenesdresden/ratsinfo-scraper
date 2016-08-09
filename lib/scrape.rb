@@ -63,6 +63,12 @@ module Scrape
     Download::new(uri)
   end
 
+  def self.download_doc(url)
+    # do not pass file object directly because of encoding bugs
+    doc = open(url).read()
+    Nokogiri::HTML(doc)
+  end
+
   def self.parse_vorgang(container)
     vorgang = {}
     container.css('.smctablehead').each do |h|

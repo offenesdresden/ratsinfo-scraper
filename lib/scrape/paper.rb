@@ -7,7 +7,7 @@ module Scrape
     end
 
     def scrape
-      doc = Nokogiri::HTML(open(@scrape_url))
+      doc = Scrape.download_doc(@scrape_url)
 
       vorgang = Scrape.parse_vorgang(doc.css('#smctablevorgang'))
       paper = OParl::Paper.new(
