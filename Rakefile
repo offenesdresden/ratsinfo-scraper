@@ -103,7 +103,7 @@ task :scrape_vorlagen do
 end
 
 task :scrape_anfragen do
-  Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_URI).each do |paper|
+  Parallel.each(Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_URI), :in_processes => CONCURRENCY) do |paper|
     puts "Anfrage #{paper.id} [#{paper.shortName}] #{paper.name}"
     paper.save_to File.join(DOWNLOAD_PATH, "anfragen", "#{paper.id}.json")
     paper.files.each do |file|
