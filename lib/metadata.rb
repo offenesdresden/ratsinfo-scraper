@@ -10,6 +10,8 @@ module OParl
 ##
 # https://oparl.org/spezifikation/online-ansicht/#eigenschaften-mit-verwendung-in-mehreren-objekttypen
 class OParlEntity < Hashie::Trash
+  include Hashie::Extensions::IndifferentAccess
+
   property :id
   property :type
   property :name
