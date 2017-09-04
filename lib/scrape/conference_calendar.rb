@@ -20,9 +20,9 @@ module Scrape
     def parse_row(row)
       doc_cell = row.css(".smcdocbox").first
       return if doc_cell == nil
-      conference_link = row.xpath("./td[6]/a").first
+      conference_link = row.xpath("./td[5]/a").first
       if conference_link.nil?
-        print("WARNING session_link not found")
+        puts("WARNING session_link not found")
         return
       end
       query = CGI.parse(conference_link["href"])
