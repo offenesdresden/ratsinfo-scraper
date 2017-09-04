@@ -8,7 +8,7 @@ require 'fileutils'
 require 'parallel'
 
 CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
-SESSION_URI = "http://ratsinfo.dresden.de/to0040.php?__ksinr=%d"
+SESSION_URI = "http://ratsinfo.dresden.de/si0050.php?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
 VORLAGEN_LISTE_URI = "http://ratsinfo.dresden.de/vo0042.php?__cwpall=1"

@@ -35,7 +35,7 @@ module Scrape
       meeting.start = Time.parse(date + " " + start_time).iso8601
       meeting.end = Time.parse(date + " " + end_time).iso8601 if end_time
 
-      meeting.files = Scrape.parse_docbox(doc.css('.smcdocbox')[0])
+      meeting.files = Scrape.parse_docbox(doc.css('.smcdocboxinfo')[0])
       meeting.files.each do |file|
         if file.name =~ /einladung/i and not meeting.invitation
           meeting.invitation = file.id
@@ -49,7 +49,7 @@ module Scrape
         end
       end
 
-      agenda = parse_agenda(doc)
+      agenda = parse_agenda
       meeting.agendaItem = agenda
       agenda.each do |item|
         meeting.files.concat(item.files)
@@ -63,8 +63,10 @@ module Scrape
     end
 
     private
-    def parse_agenda(doc)
+    def parse_agenda
+      agenda_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0040.php'
       results = []
+      doc = Nokogiri::HTML(open(agenda_url))
       doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]").each do |row|
         item = OParl::AgendaItem.new(
           { :name => row.css('.smc_topht').text().strip_whitespace,
@@ -97,7 +99,7 @@ module Scrape
     end
 
     def parse_participants
-      participant_url = @scrape_url.gsub! '/to0040.php', '/to0045.php'
+      participant_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0045.php'
       participants = Array.new()
       doc = Nokogiri::HTML(open(participant_url))
       doc.css("table.smccontenttable tr").each do |row|
