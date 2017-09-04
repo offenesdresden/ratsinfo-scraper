@@ -66,7 +66,7 @@ module Scrape
     def parse_agenda
       agenda_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0040.php'
       results = []
-      doc = Nokogiri::HTML(open(agenda_url))
+      doc = Scrape.download_doc(agenda_url)
       doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]").each do |row|
         item = OParl::AgendaItem.new(
           { :name => row.css('.smc_topht').text().strip_whitespace,
@@ -101,7 +101,7 @@ module Scrape
     def parse_participants
       participant_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0045.php'
       participants = Array.new()
-      doc = Nokogiri::HTML(open(participant_url))
+      doc = Scrape.download_doc(participant_url)
       doc.css("table.smccontenttable tr").each do |row|
         participant = row.css("td a")
         if participant.to_s != ''

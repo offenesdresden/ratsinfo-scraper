@@ -66,6 +66,9 @@ module Scrape
   def self.download_doc(url)
     # do not pass file object directly because of encoding bugs
     doc = open(url).read()
+    # fix invalid UTF-8
+    doc = OParl::PdfMetadata.guess_encoding(doc)
+
     Nokogiri::HTML(doc)
   end
 
