@@ -11,7 +11,7 @@ module Scrape
       doc = Scrape.download_doc(@scrape_url)
       n = 0
       paper = nil
-      doc.css("table.smccontenttable tr").each do |row|
+      doc.css("table.smccontenttable > tbody > tr").each do |row|
         if n % 2 == 0
           paper = parse_row1(row)
         elsif paper
@@ -35,8 +35,8 @@ module Scrape
           { :id => $1,
             :name => name.text().strip_whitespace
           })
-      elsif href
-        puts "Unexpected Anfrage: #{href}"
+      else
+        puts "Unexpected Anfrage: #{name.inspect}"
       end
     end
 
