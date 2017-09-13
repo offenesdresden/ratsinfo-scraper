@@ -53,21 +53,34 @@ module Scrape
         table.attr('summary').to_s == "Inhalt der Tabelle: Beratungen der Vorlage" or
         table.attr('summary').to_s == "Inhalt der Tabelle: Weitere Beratungsfolge der Vorlage"
       end.each do |table|
-        table.css('tbody tr').each do |row|
+        table.css('> tbody > tr').each do |row|
           consultation = OParl::Consultation.new
+
           a = row.css('td.smc_field_grname a[1]')
           unless a.empty?
             link = a.attr('href').to_s
             if link =~ /ksinr=(\d+)/
               consultation.meeting = $1
             end
-            if link =~ /kgrnr=(\d+)/
-              # seems to be no longer linked, only named as text
-              consultation.organization = [$1]
-            end
-
-            consultations << consultation
+          else
+            consultation.organization = [
+              OParl::Organization.new(:name => row.css('td.smc_field_grname').text)
+            ]
           end
+          consultation.role = row.css('td.smc_field_txname').text
+          if consultation.role =~ /^beschlie/i
+            consultation.authoritative = true
+          end
+          case row.css('td.smc_field_bfost').text.strip
+          when /nicht.+?ffentlich/i
+            consultation.public = false
+          when /.+?ffentlich/i
+            consultation.public = true
+          else
+            puts "Cannot determine if consultation is public!"
+          end
+
+          consultations << consultation
         end
       end
 

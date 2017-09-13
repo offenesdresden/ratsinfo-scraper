@@ -215,6 +215,11 @@ end
 class Consultation < OParlEntity
   property :meeting
   property :organization
+
+  property :role
+  property :authoritative
+  # !!! Deviation from OParl (this belongs into meeting.agendaItem)
+  property :public
 end
 
 
