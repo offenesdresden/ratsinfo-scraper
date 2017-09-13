@@ -120,7 +120,7 @@ task :fetch_meetings_anfragen do
     Parallel.each(meeting.agendaItem, :in_processes => CONCURRENCY) do |agenda_item|
       consultation = agenda_item.consultation
       next unless consultation
-      id = consultation.parentID
+      id = consultation.paper
       paper_path = File.join(DOWNLOAD_PATH, "vorlagen", "#{id}.json")
 
       paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
