@@ -29,7 +29,8 @@ module Scrape
         end
       end
 
-      paper.consultation = parse_consultations(doc)
+      consultations_url = @scrape_url.sub(/vo0050\.php/, "vo0051.php")
+      paper.consultation = parse_consultations(consultations_url)
 
       paper
     end
@@ -44,22 +45,24 @@ module Scrape
       docbox ? Scrape.parse_docbox(docbox) : []
     end
 
-    def parse_consultations(doc)
+    def parse_consultations(url)
       consultations = []
 
+      doc = Scrape.download_doc(url)
       doc.css('table').select do |table|
         table.attr('summary').to_s == "Inhalt der Tabelle: Beratungen der Vorlage" or
         table.attr('summary').to_s == "Inhalt der Tabelle: Weitere Beratungsfolge der Vorlage"
       end.each do |table|
-        table.css('tbody tr[valign=top]').each do |row|
+        table.css('tbody tr').each do |row|
           consultation = OParl::Consultation.new
-          a = row.css('a[1]')
+          a = row.css('td.smc_field_grname a[1]')
           unless a.empty?
             link = a.attr('href').to_s
             if link =~ /ksinr=(\d+)/
               consultation.meeting = $1
             end
             if link =~ /kgrnr=(\d+)/
+              # seems to be no longer linked, only named as text
               consultation.organization = [$1]
             end
 
