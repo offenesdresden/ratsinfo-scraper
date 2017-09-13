@@ -73,9 +73,9 @@ module Scrape
           end
           case row.css('td.smc_field_bfost').text.strip
           when /nicht.+?ffentlich/i
-            consultation.public = false
+            consultation.agendaItem = OParl::AgendaItem::new(:public => false)
           when /.+?ffentlich/i
-            consultation.public = true
+            consultation.agendaItem = OParl::AgendaItem::new(:public => true)
           else
             puts "Cannot determine if consultation is public!"
           end

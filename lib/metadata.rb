@@ -163,6 +163,7 @@ class AgendaItem < OParlEntity
   property :resolutionFile
   property :resolutionText
   property :auxiliaryFile
+  property :public
 
   attr_accessor :files
 end
@@ -215,11 +216,10 @@ end
 class Consultation < OParlEntity
   property :meeting
   property :organization
+  property :agendaItem
 
   property :role
   property :authoritative
-  # !!! Deviation from OParl (this belongs into meeting.agendaItem)
-  property :public
 end
 
 
