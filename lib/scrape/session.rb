@@ -77,7 +77,7 @@ module Scrape
         voname = row.css('.smc_field_voname')
         if not voname.empty? and voname.attr('href').to_s =~ /kvonr=(\d+)/
           item.consultation = OParl::Consultation.new(
-            { :parentID => $1
+            { :paper => $1
             })
         end
 

@@ -20,7 +20,6 @@ class OParlEntity < Hashie::Trash
   property :created
   property :modified
   property :keyword
-  property :parentID
 
   def initialize(*a)
     super
@@ -103,9 +102,15 @@ class Meeting < OParlEntity
       if consultation.is_a? String
         # Handle plain paper id from when we didn't store complex Consultation in AgendaItem
         item.consultation = Consultation.new(
-          { :parentID => consultation
+          { :paper => consultation
           })
       elsif consultation.is_a? Hash
+        if consultation.has_key? :parentID
+          # Fixup old format
+          consultation[:paper] = consultation[:parentID]
+          consultation.delete :parentID
+        end
+
         item.consultation = Consultation.new(consultation)
       end
       item
@@ -217,6 +222,7 @@ class Consultation < OParlEntity
   property :meeting
   property :organization
   property :agendaItem
+  property :paper
 
   property :role
   property :authoritative
