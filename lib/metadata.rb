@@ -171,6 +171,9 @@ class AgendaItem < OParlEntity
   property :public
 
   attr_accessor :files
+
+  # Not in OParl
+  property :vote
 end
 
 class File < OParlEntity

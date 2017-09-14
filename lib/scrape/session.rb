@@ -67,7 +67,7 @@ module Scrape
       agenda_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0040.php'
       results = []
       doc = Scrape.download_doc(agenda_url)
-      doc.xpath("//table[@id='smc_page_to0040_contenttable1']/tbody/tr[not(@class='smcrowh')]").each do |row|
+      doc.css("table#smc_page_to0040_contenttable1 > tbody > tr.smc_toph").each do |row|
         item = OParl::AgendaItem.new(
           { :name => row.css('.smc_topht').text().strip_whitespace,
             :number => row.css('.smc_tophn').text().strip_whitespace,
@@ -89,6 +89,26 @@ module Scrape
           else
             item.auxiliaryFile = [] unless item.auxiliaryFile
             item.auxiliaryFile.push(file.id)
+          end
+        end
+
+        # Metadata
+        row.xpath('following-sibling::tr').each do |row|
+          if row.attr('class').split(/\s+/).include? 'smc_tophz'
+            key_cell = row.css('td.smc_topr')[0]
+            value_cell = key_cell.xpath('following-sibling::td')
+            value = value_cell.text
+
+            case key_cell.text
+            when /Beschluss/
+              item.resolutionText = strip_text value
+            when /Abstimmung/
+              item.vote = parse_vote_text(value)
+            else
+              throw "Unknown agentaItem metadata: #{key_cell.text} #{value.inspect}"
+            end
+          else
+            break
           end
         end
 
@@ -121,6 +141,40 @@ module Scrape
       end
       participants
     end
-  end
 
+    VOTE_MAPPING = {
+      :yes => 'ja',
+      :no => 'nein',
+      :neutral => 'enthalt',
+      :biased => 'befang',
+    }
+
+    def parse_vote_text(text)
+      results = {}
+
+      text.scan(/(\w+):\W*(\d+)/).each do |key,value|
+        mapping = VOTE_MAPPING.select { |field,key_start|
+          key.downcase.start_with? key_start
+        }.first
+        if mapping
+          results[mapping[0]] = value.to_i
+        else
+          throw "Unrecognized vote: #{{ key => value }.inspect}"
+        end
+      end
+
+      unless results.empty?
+        OParl::VoteResult::new results
+      else
+        nil
+      end
+    end
+
+    # Removes whitespace at begin and end of a String
+    #
+    # Also removes (&nbsp; \xA0) contrary to String#strip
+    def strip_text(text)
+      text.sub(/^\W+/, "").sub(/\W+$/, "")
+    end
+  end
 end
