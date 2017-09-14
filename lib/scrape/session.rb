@@ -101,7 +101,7 @@ module Scrape
 
             case key_cell.text
             when /Beschluss/
-              item.resolutionText = strip_text value
+              item.result = strip_text value
             when /Abstimmung/
               item.vote = parse_vote_text(value)
             else

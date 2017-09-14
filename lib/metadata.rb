@@ -165,6 +165,7 @@ end
 class AgendaItem < OParlEntity
   property :consultation
   property :number
+  property :result
   property :resolutionFile
   property :resolutionText
   property :auxiliaryFile
