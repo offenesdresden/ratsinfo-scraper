@@ -17,7 +17,7 @@ module Scrape
 
     private
     def parse_row(row)
-      name = row.css('a.smc_field_voname')
+      name = row.css('a.smc-link-normal')
       if name.empty?
         return nil
       end
