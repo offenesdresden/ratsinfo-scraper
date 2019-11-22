@@ -25,7 +25,7 @@ module Scrape
 
     private
     def parse_row1(row)
-      name = row.css('a.smc_doc')
+      name = row.css('.smcrecherchetitle a')
       if not name.empty? and
         (href = name.attr('href').to_s) and
         href =~ /kagnr=(\d+)/
