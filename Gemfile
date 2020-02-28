@@ -4,7 +4,7 @@ group :test do
   gem "vcr", "~> 2.8"
   gem "webmock", "~> 1.16"
   gem 'pry-byebug'
-  gem "rake", "~> 0.9"
+  gem "rake", "~> 12.3"
 end
 
 gem "rubyzip", "~> 1.1"

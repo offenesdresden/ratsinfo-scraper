@@ -42,7 +42,7 @@ GEM
     pry-byebug (3.4.0)
       byebug (~> 9.0)
       pry (~> 0.10)
-    rake (0.9.6)
+    rake (12.3.3)
     rubyzip (1.2.0)
     safe_yaml (1.0.4)
     slop (3.6.0)
@@ -67,7 +67,7 @@ DEPENDENCIES
   open4
   parallel
   pry-byebug
-  rake (~> 0.9)
+  rake (~> 12.3)
   rubyzip (~> 1.1)
   vcr (~> 2.8)
   webmock (~> 1.16)
