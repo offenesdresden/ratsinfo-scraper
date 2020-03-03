@@ -7,7 +7,7 @@ group :test do
   gem "rake", "~> 0.9"
 end
 
-gem "rubyzip", "~> 1.1"
+gem "rubyzip", "~> 1.3"
 gem "mechanize", "~> 2.7"
 gem "hashie", "~> 2.0"
 gem "mini_magick"
