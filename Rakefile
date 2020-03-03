@@ -7,21 +7,21 @@ require 'pry'
 require 'fileutils'
 require 'parallel'
 
-CALENDAR_URI = "http://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
-SESSION_URI = "http://ratsinfo.dresden.de/si0050.php?__ksinr=%d"
+CALENDAR_URI = "https://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
+SESSION_URI = "https://ratsinfo.dresden.de/si0050.php?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
-VORLAGEN_LISTE_URI = "http://ratsinfo.dresden.de/vo0042.php?__cwpall=1"
-VORLAGE_URI = "http://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
+VORLAGEN_LISTE_URI = "https://ratsinfo.dresden.de/vo0042.php?__cwpall=1"
+VORLAGE_URI = "https://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
 
-ANFRAGEN_LISTE_URI = "http://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
-ANFRAGE_URI = "http://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
+ANFRAGEN_LISTE_URI = "https://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
+ANFRAGE_URI = "https://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
 
-GREMIEN_LISTE_URI = "http://ratsinfo.dresden.de/gr0040.php?__cwpall=1&"
+GREMIEN_LISTE_URI = "https://ratsinfo.dresden.de/gr0040.php?__cwpall=1&"
 
-PERSON_URI = "http://ratsinfo.dresden.de/kp0050.php?__cwpall=1&__kpenr=%d"
+PERSON_URI = "https://ratsinfo.dresden.de/kp0050.php?__cwpall=1&__kpenr=%d"
 
-FILE_URI = "http://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
+FILE_URI = "https://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
 
 CONCURRENCY = 16
 
@@ -32,7 +32,7 @@ scrape_end_date = Time.now.to_date
 
 task :default => [:scrape_sessions]
 
-desc "Scrape Documents from http://ratsinfo.dresden.de with a minmal timerange"
+desc "Scrape Documents from https://ratsinfo.dresden.de with a minmal timerange"
 task :testmonth do
   scrape_start_date = Date.new(2009, 8)
   scrape_end_date  = Date.new(2009, 8)
@@ -40,7 +40,7 @@ task :testmonth do
 end
 
 
-desc "Scrape Documents from http://ratsinfo.dresden.de"
+desc "Scrape Documents from https://ratsinfo.dresden.de"
 task :scrape => [
        :scrape_gremien,
        :scrape_people,
