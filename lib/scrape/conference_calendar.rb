@@ -10,7 +10,7 @@ module Scrape
 
     def each(&block)
       doc = Scrape.download_doc(@scrape_url)
-      doc.css("table.smccontenttable tr").each do |row|
+      doc.css(".smctablesitzungen tr").each do |row|
         conference_id = parse_row(row)
         yield conference_id unless conference_id.nil?
       end
@@ -18,16 +18,15 @@ module Scrape
 
     private
     def parse_row(row)
-      doc_cell = row.css(".smcdocbox").first
-      return if doc_cell == nil
-      conference_link = row.xpath("./td[5]/a").first
+      # doc_cell = row.css(".smcdocbox").first
+      # return if doc_cell == nil
+      conference_link = row.css(".silink h4 a").first
       if conference_link.nil?
-        puts("WARNING session_link not found")
+        puts("WARNING conference_link not found")
         return
       end
-      query = CGI.parse(conference_link["href"])
-      id = query["to0040.php?__ksinr"].first
-      id
+      conference_link["href"] =~ /ksinr=(\d+)/
+      $1
     end
   end
 

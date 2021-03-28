@@ -5,7 +5,7 @@ require 'scrape'
 describe Scrape::ConferenceCalendarScraper do
   it "should return ids" do
     VCR.use_cassette('calendar') do
-      url = "http://ratsinfo.dresden.de/si0040.php?__cjahr=2010&__cmonat=1"
+      url = "http://ratsinfo.dresden.de/si0040.asp?__cjahr=2010&__cmonat=1"
       s = Scrape::ConferenceCalendarScraper.new(url)
       a = s.to_a
       expected = ["428", "349", "350", "468", "417", "479", "351", "353", "355", "356", "707", "359",
@@ -21,7 +21,7 @@ describe "scrape session 29" do
   before do
     VCR.use_cassette('zip_archive_29') do
       @session_path = Dir.mktmpdir
-      session_url = "http://ratsinfo.dresden.de/to0040.php?__ksinr=29"
+      session_url = "http://ratsinfo.dresden.de/to0040.asp?__ksinr=29"
       @zip_file = Scrape.download_zip_archive(session_url)
       @archive = Scrape::DocumentArchive.new(@zip_file.path)
     end
@@ -54,7 +54,7 @@ describe "scrape session 89 (without documents)" do
   before do
     VCR.use_cassette('zip_archive_89"') do
       @session_path = Dir.mktmpdir
-      session_url = "http://ratsinfo.dresden.de/to0040.php?__ksinr=89"
+      session_url = "http://ratsinfo.dresden.de/to0040.asp?__ksinr=89"
       @zip_file = Scrape.download_zip_archive(session_url)
     end
   end
@@ -67,7 +67,7 @@ describe "scrape session 428" do
   before do
     VCR.use_cassette('zip_archive_428"') do
       @session_path = Dir.mktmpdir
-      session_url = "http://ratsinfo.dresden.de/to0040.php?__ksinr=428"
+      session_url = "http://ratsinfo.dresden.de/to0040.asp?__ksinr=428"
       @zip_file = Scrape.download_zip_archive(session_url)
       @archive = Scrape::DocumentArchive.new(@zip_file.path)
     end

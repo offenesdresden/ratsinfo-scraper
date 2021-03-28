@@ -9,7 +9,7 @@ module Scrape
 
     def each(&block)
       doc = Scrape.download_doc(@scrape_url)
-      doc.css("table.smccontenttable tr").each do |row|
+      doc.css(".smctablevorlagen tr").each do |row|
         paper = parse_row(row)
         yield paper if paper
       end

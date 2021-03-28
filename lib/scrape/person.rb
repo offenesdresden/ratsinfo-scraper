@@ -11,8 +11,9 @@ module Scrape
 
     MAX_GAP = 100
     
-    def initialize(uri_template)
-      @uri_template = uri_template
+    def initialize(uri_info_template, uri_gremien_template)
+      @uri_info_template = uri_info_template
+      @uri_gremien_template = uri_gremien_template
       @i = 0
       @gap = 0
     end
@@ -20,7 +21,9 @@ module Scrape
     def each(&block)
       while @gap < MAX_GAP
         @i += 1
-        person = PersonScraper.new(sprintf(@uri_template, @i)).scrape
+        info_url = sprintf(@uri_info_template, @i)
+        gremien_url = sprintf(@uri_gremien_template, @i)
+        person = PersonScraper.new(info_url, gremien_url).scrape
         if person
           person.id = @i.to_s
           yield person
@@ -34,23 +37,26 @@ module Scrape
   end
 
   class PersonScraper
-    def initialize(scrape_url)
-      @scrape_url = scrape_url
+    def initialize(info_url, gremien_url)
+      @info_url = info_url
+      @gremien_url = gremien_url
     end
 
     def scrape
-      doc = Nokogiri::HTML(open(@scrape_url))
+      doc = Nokogiri::HTML(open(@gremien_url))
       name = doc.css('h1.smc_h1').text()
       if name and not name.empty?
         person = OParl::Person.new(
           { :name => name
           })
         person.membership = parse_memberships(doc.css('#smc_page_kp0050_contenttable1 tbody tr'))
-        scrape_info(@scrape_url.sub(/kp0050/, "kp0051"), person)
+        scrape_info(@info_url, person)
         person
       else
         nil
       end
+    rescue OpenURI::HTTPError
+      nil
     end
 
     private
@@ -58,16 +64,16 @@ module Scrape
       rows.map do |row|
         m = OParl::Membership.new(
           {
-            :role => row.css('.smc_field_amname').text(),
+            :role => row.css('.amname').text(),
           })
-        name = row.css('.smc_field_grname a')
+        name = row.css('.grname a')
         if not name.empty? and name.attr('href').to_s =~ /kgrnr=(\d+)/
           m.organization = $1
         end
-        if (start_date = row.css('.smc_field_mgadat').text().strip_whitespace) and not start_date.empty?
+        if (start_date = row.css('.mgadat').text().strip_whitespace) and not start_date.empty?
           m.startDate = Date.parse(start_date).iso8601
         end
-        if (end_date = row.css('.smc_field_mgedat').text().strip_whitespace) and not end_date.empty?
+        if (end_date = row.css('.mgedat').text().strip_whitespace) and not end_date.empty?
           m.endDate = Date.parse(end_date).iso8601
         end
         m

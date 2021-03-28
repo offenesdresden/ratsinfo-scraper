@@ -9,7 +9,7 @@ module Scrape
 
     def each(&block)
       doc = Scrape.download_doc(@scrape_url)
-      doc.css('#smc_page_gr0040_contenttable1 td.smc_field_grname a').each do |link|
+      doc.css('#smc_page_gr0040_contenttable1 td.grname a').each do |link|
         if link.attr('href').to_s =~ /kgrnr=(\d+)/
           yield OParl::Organization.new(
                   { :id => $1,

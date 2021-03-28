@@ -74,9 +74,9 @@ module Scrape
 
   def self.parse_vorgang(container)
     vorgang = {}
-    container.css('.smctablehead').each do |h|
-      k = h.text().strip_whitespace.sub(/:$/, "")
-      v = h.xpath('following-sibling::td[1]').text().strip_whitespace
+    container.css('.smc-cell-head').each do |h|
+      k = h.text().strip_whitespace
+      v = h.xpath('following-sibling::div[1]').text().strip_whitespace
       vorgang[k] = v
     end
     vorgang
@@ -84,10 +84,10 @@ module Scrape
 
   def self.parse_docbox(container)
     files = []
-    container.css('.smcdocname a').each do |row|
+    container.css('.smc-xxdat h4 a').each do |row|
       if row.attr('href').to_s =~ /id=(\d+)/
         f = OParl::File.new(
-          { :name => row.attr('title').to_s.strip_whitespace,
+          { :name => row.text.to_s.strip_whitespace,
             :id => $1
           })
         files << f

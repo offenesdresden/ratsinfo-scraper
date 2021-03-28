@@ -7,35 +7,36 @@ require 'pry'
 require 'fileutils'
 require 'parallel'
 
-CALENDAR_URI = "https://ratsinfo.dresden.de/si0040.php?__cjahr=%d&__cmonat=%s"
-SESSION_URI = "https://ratsinfo.dresden.de/si0050.php?__ksinr=%d"
+CALENDAR_URI = "https://ratsinfo.dresden.de/si0040.asp?__cjahr=%d&__cmonat=%s"
+SESSION_URI = "https://ratsinfo.dresden.de/si0050.asp?__ksinr=%d"
 DOWNLOAD_PATH = ENV["DOWNLOAD_PATH"] || File.join(File.dirname(__FILE__), "data")
 
-VORLAGEN_LISTE_URI = "https://ratsinfo.dresden.de/vo0042.php?__cwpall=1"
-VORLAGE_URI = "https://ratsinfo.dresden.de/vo0050.php?__kvonr=%s"
+VORLAGEN_LISTE_URI = "https://ratsinfo.dresden.de/vo0042.asp?__cwpall=1"
+VORLAGE_URI = "https://ratsinfo.dresden.de/vo0050.asp?__kvonr=%s"
 
-ANFRAGEN_LISTE_URI = "https://ratsinfo.dresden.de/ag0041.php?__cwpall=1"
-ANFRAGE_URI = "https://ratsinfo.dresden.de/ag0050.php?__kagnr=%s"
+ANFRAGEN_LISTE_URI = "https://ratsinfo.dresden.de/ag0080.asp?smcadat=2458000"
+ANFRAGE_URI = "https://ratsinfo.dresden.de/ag0050.asp?__kagnr=%s"
 
-GREMIEN_LISTE_URI = "https://ratsinfo.dresden.de/gr0040.php?__cwpall=1&"
+GREMIEN_LISTE_URI = "https://ratsinfo.dresden.de/gr0040.asp?__cwpall=1&"
 
-PERSON_URI = "https://ratsinfo.dresden.de/kp0050.php?__cwpall=1&__kpenr=%d"
+PERSON_INFO_URI = "https://ratsinfo.dresden.de/pe0051.asp?__cwpall=1&__kpenr=%d"
+PERSON_GREMIEN_URI = "https://ratsinfo.dresden.de/kp0050.asp?__cwpall=1&__kpenr=%d"
 
-FILE_URI = "https://ratsinfo.dresden.de/getfile.php?id=%s&type=do"
+FILE_URI = "https://ratsinfo.dresden.de/getfile.asp?id=%s&type=do"
 
 CONCURRENCY = 16
 
 directory DOWNLOAD_PATH
 
-scrape_start_date = Date.new(2009,8)
+scrape_start_date = Date.new(2009, 8)
 scrape_end_date = Time.now.to_date
 
 task :default => [:scrape_sessions]
 
 desc "Scrape Documents from https://ratsinfo.dresden.de with a minmal timerange"
 task :testmonth do
-  scrape_start_date = Date.new(2009, 8)
-  scrape_end_date  = Date.new(2009, 8)
+  scrape_start_date = Date.new(2019, 9)
+  scrape_end_date  = Date.new(2019, 10)
   Rake::Task["scrape_sessions"].invoke
 end
 
@@ -58,10 +59,18 @@ task :scrape_gremien do
 end
 
 task :scrape_people do
-  Scrape::PeopleScraper.new(PERSON_URI).each do |person|
+  Scrape::PeopleScraper.new(PERSON_INFO_URI, PERSON_GREMIEN_URI).each do |person|
     puts "[#{person.id}] #{person.name}"
     person.save_to File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
   end
+end
+
+task :test_session do
+  session_url = sprintf(SESSION_URI, 7548)
+  meeting = Scrape::SessionScraper.new(session_url).scrape
+
+  require 'pp'
+  pp meeting
 end
 
 task :scrape_sessions do
@@ -77,15 +86,22 @@ task :scrape_sessions do
       puts "[#{meeting.id}] #{meeting.name}"
 
       meeting.save_to File.join(DOWNLOAD_PATH, "meetings", "#{meeting.id}.json")
-      meeting.persons.each do |person|
-        persons_path = File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
-        person.save_to persons_path
-      end
+      # meeting.persons.each do |person|
+      #   persons_path = File.join(DOWNLOAD_PATH, "persons", "#{person.id}.json")
+      #   person.save_to persons_path
+      # end
       meeting.files.each do |file|
         file.save_to File.join(DOWNLOAD_PATH, "files", "#{file.id}.json")
       end
     end
   end
+end
+
+task :test_vorlage do
+  id = 13658
+  paper = Scrape::PaperScraper.new(sprintf(VORLAGE_URI, id)).scrape
+  require 'pp'
+  pp paper
 end
 
 task :scrape_vorlagen do
@@ -104,6 +120,10 @@ end
 
 task :scrape_anfragen do
   Parallel.each(Scrape::AnfragenListeScraper.new(ANFRAGEN_LISTE_URI), :in_processes => CONCURRENCY) do |paper|
+    id = paper.id
+    paper = Scrape::PaperScraper.new(sprintf(ANFRAGE_URI, id)).scrape
+    paper.id = id  # Restore id
+
     puts "Anfrage #{paper.id} [#{paper.shortName}] #{paper.name}"
     paper.save_to File.join(DOWNLOAD_PATH, "anfragen", "#{paper.id}.json")
     paper.files.each do |file|

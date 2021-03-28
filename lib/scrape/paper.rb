@@ -9,11 +9,12 @@ module Scrape
     def scrape
       doc = Scrape.download_doc(@scrape_url)
 
-      vorgang = Scrape.parse_vorgang(doc.css('#smctablevorgang'))
+      vorgang = Scrape.parse_vorgang(doc.css('.smccontenttable'))
+      shortName = vorgang['Vorlage'] || vorgang['Nummer']
       paper = OParl::Paper.new(
         { :name => vorgang['Betreff'],
-          :shortName => vorgang['Name'],
-          :reference => vorgang['Name'],
+          :shortName => shortName,
+          :reference => shortName,
           :paperType => vorgang['Art']
         })
       date_str = vorgang['Datum']
@@ -21,7 +22,7 @@ module Scrape
 
       paper.files = parse_files(doc)
       paper.files.each do |file|
-        if file.name == vorgang['Name']
+        if file.name == shortName
           paper.mainFile = file.id
         else
           paper.auxiliaryFile = [] unless paper.auxiliaryFile
@@ -29,8 +30,9 @@ module Scrape
         end
       end
 
-      consultations_url = @scrape_url.sub(/vo0050\.php/, "vo0051.php")
-      paper.consultation = parse_consultations(consultations_url)
+      consultations_url = @scrape_url.sub(/vo0050\.asp/, "vo0053.asp")
+      # TODO: there are no longer any links
+      # paper.consultation = parse_consultations(consultations_url)
 
       paper
     end
@@ -41,8 +43,9 @@ module Scrape
       # TODO: what if there are files but only in agenda items? then
       # they'll end up having .smcdocbox[0], which is not what we want
       # here!
-      docbox = doc.css('.smcdocbox')[0]
-      docbox ? Scrape.parse_docbox(docbox) : []
+      doc.css('.smcbox')
+        .map { |docbox| Scrape.parse_docbox(docbox) }
+        .flatten
     end
 
     def parse_consultations(url)
@@ -56,7 +59,7 @@ module Scrape
         table.css('> tbody > tr').each do |row|
           consultation = OParl::Consultation.new
 
-          a = row.css('td.smc_field_grname a[1]')
+          a = row.css('td.grname a[1]')
           unless a.empty?
             link = a.attr('href').to_s
             if link =~ /ksinr=(\d+)/
@@ -64,14 +67,14 @@ module Scrape
             end
           else
             consultation.organization = [
-              OParl::Organization.new(:name => row.css('td.smc_field_grname').text)
+              OParl::Organization.new(:name => row.css('td.grname').text)
             ]
           end
-          consultation.role = row.css('td.smc_field_txname').text
+          consultation.role = row.css('td.txname').text
           if consultation.role =~ /^beschlie/i
             consultation.authoritative = true
           end
-          case row.css('td.smc_field_bfost').text.strip
+          case row.css('td.bfost').text.strip
           when /nicht.+?ffentlich/i
             consultation.agendaItem = OParl::AgendaItem::new(:public => false)
           when /.+?ffentlich/i

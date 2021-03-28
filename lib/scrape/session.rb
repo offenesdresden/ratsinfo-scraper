@@ -18,11 +18,11 @@ module Scrape
     def scrape
       doc = Scrape.download_doc(@scrape_url)
 
-      vorgang = Scrape.parse_vorgang(doc.css('#smctablevorgang'))
+      vorgang = Scrape.parse_vorgang(doc.css('.smccontenttable'))
       meeting = OParl::Meeting.new(
         { :shortName => vorgang['Sitzung'],
           :locality => vorgang['Raum'],
-          :name => vorgang['Bezeichnung']
+          :name => doc.css('h1').text
         })
       if (organization = Scrape.get_organization_by_name(vorgang['Gremium']))
         meeting.organization = [organization.id]
@@ -35,7 +35,9 @@ module Scrape
       meeting.start = Time.parse(date + " " + start_time).iso8601
       meeting.end = Time.parse(date + " " + end_time).iso8601 if end_time
 
-      meeting.files = Scrape.parse_docbox(doc.css('.smcdocboxinfo')[0])
+      meeting.files = doc.css('.smc-documents').map { |container|
+        Scrape.parse_docbox(container)
+      }.flatten
       meeting.files.each do |file|
         if file.name =~ /einladung/i and not meeting.invitation
           meeting.invitation = file.id
@@ -56,21 +58,25 @@ module Scrape
       end
       meeting
 
-      meeting.persons = parse_participants
-      meeting.participant = meeting.persons.map { |person| person.id }
+      # TODO: just no longer shown
+      # meeting.persons = parse_participants
+      # meeting.participant = meeting.persons.map { |person| person.id }
 
       meeting
     end
 
     private
     def parse_agenda
-      agenda_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0040.php'
+      agenda_url = @scrape_url.gsub! /\/[a-z0-9]+\.asp/, '/si0056.asp'
       results = []
       doc = Scrape.download_doc(agenda_url)
-      doc.css("table#smc_page_to0040_contenttable1 > tbody > tr.smc_toph").each do |row|
+      doc.css(".panel-heading").each do |row|
+        name = row.css('.smc-panel-text-title').text.strip_whitespace
+        next if name.empty?
+        number = row.css('h3 .badge')[0].text.strip_whitespace
         item = OParl::AgendaItem.new(
-          { :name => row.css('.smc_topht').text().strip_whitespace,
-            :number => row.css('.smc_tophn').text().strip_whitespace,
+          { :name => name,
+            :number => number,
           })
 
         # Vorlage/Paper.id
@@ -118,29 +124,29 @@ module Scrape
       results
     end
 
-    def parse_participants
-      participant_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0045.php'
-      participants = Array.new()
-      doc = Scrape.download_doc(participant_url)
-      doc.css("table.smccontenttable tr").each do |row|
-        participant = row.css("td a")
-        if participant.to_s != ''
-          name = participant.attr('title').to_s()[18..-1]
-          itsUrl = row.css("td a").attr('href').to_s()
-          person_id = nil
-          if itsUrl =~ /kpenr=(\d+)/
-            person_id = $1
-          end
-          participants.push(
-            OParl::Person.new(
-            { :id => person_id,
-              :name => name.strip_whitespace
-            })
-          )
-        end
-      end
-      participants
-    end
+    # def parse_participants
+    #   participant_url = @scrape_url.gsub! /\/[a-z0-9]+\.php/, '/to0045.php'
+    #   participants = Array.new()
+    #   doc = Scrape.download_doc(participant_url)
+    #   doc.css("table.smccontenttable tr").each do |row|
+    #     participant = row.css("td a")
+    #     if participant.to_s != ''
+    #       name = participant.attr('title').to_s()[18..-1]
+    #       itsUrl = row.css("td a").attr('href').to_s()
+    #       person_id = nil
+    #       if itsUrl =~ /kpenr=(\d+)/
+    #         person_id = $1
+    #       end
+    #       participants.push(
+    #         OParl::Person.new(
+    #         { :id => person_id,
+    #           :name => name.strip_whitespace
+    #         })
+    #       )
+    #     end
+    #   end
+    #   participants
+    # end
 
     VOTE_MAPPING = {
       :yes => 'ja',
