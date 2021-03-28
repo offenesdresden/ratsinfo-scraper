@@ -48,7 +48,7 @@ GEM
       pry (~> 0.13.0)
     public_suffix (4.0.6)
     racc (1.5.2)
-    rake (0.9.6)
+    rake (12.3.3)
     rexml (3.2.4)
     rubyzip (1.3.0)
     unf (0.1.4)
@@ -73,7 +73,7 @@ DEPENDENCIES
   open4
   parallel
   pry-byebug
-  rake (~> 0.9)
+  rake (~> 12.3)
   rubyzip (~> 1.1)
   vcr (~> 2.8)
   webmock (~> 1.16)
