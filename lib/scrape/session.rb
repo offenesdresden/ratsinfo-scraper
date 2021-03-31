@@ -78,6 +78,7 @@ module Scrape
           { :name => name,
             :number => number,
           })
+        row = row.xpath('following-sibling::div')[0]
 
         # Vorlage/Paper.id
         voname = row.css('.smc_field_voname')
@@ -99,23 +100,11 @@ module Scrape
         end
 
         # Metadata
-        row.xpath('following-sibling::tr').each do |row|
-          if row.attr('class').split(/\s+/).include? 'smc_tophz'
-            key_cell = row.css('td.smc_topr')[0]
-            value_cell = key_cell.xpath('following-sibling::td')
-            value = value_cell.text
-
-            case key_cell.text
-            when /Beschluss/
-              item.result = strip_text value
-            when /Abstimmung/
-              item.vote = parse_vote_text(value)
-            else
-              throw "Unknown agentaItem metadata: #{key_cell.text} #{value.inspect}"
-            end
-          else
-            break
-          end
+        if (result_el = row.css('.smc_field_smcdv0_box2_beschluss')[0])
+          item.result = result_el.text.sub(/^.+?:\s+/, "")
+        end
+        if (vote_el = row.css('.smc_field_smcdv0_box2_abstimmung')[0])
+          item.vote = parse_vote_text vote_el.text.sub(/^.+?:\s+/, "")
         end
 
         # Only if valid
