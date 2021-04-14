@@ -12,7 +12,7 @@ end
 
 path = ARGV[0]
 meetings = []
-Dir::each_child(path) do |filename|
+Dir::foreach(path) do |filename|
   next unless filename =~ /\.json$/
 
   json = JSON::load File::open("#{path}/#{filename}")
