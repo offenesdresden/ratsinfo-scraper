@@ -10,6 +10,8 @@ require './dresden_dns_hack'
 # HTTP/JSON helper
 module Scrape
   def self.fetch url
+    url.sub! /^http:/, "https:"
+
     open url do |res|
       code = res.status[0]
       raise "HTTP #{code}" if code != "200"

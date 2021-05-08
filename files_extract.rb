@@ -17,7 +17,7 @@ Dir.foreach(DIR) do |json_name|
     pdf_path = json_path.sub(/\.json$/, ".pdf")
     next if File.exist? pdf_path
 
-    pdf_url = json['downloadUrl']
+    pdf_url = json['downloadUrl'].sub(/^http:/, "https:")
     puts "GET " + pdf_url
     open pdf_url do |res|
       code = res.status[0]
