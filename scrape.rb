@@ -147,6 +147,19 @@ OParl::Body.collect do |body|
 
     if item.id =~ /^http:\/\/oparl\.dresden\.de\/bodies\/0001\/(.+)/
       path = $1
+      # retain legacy hierarchy
+      if path =~ /^people\/(.*)/
+        path = "persons/#{$1}"
+      elsif path =~ /^organizations\/at\/(.*)/
+        path = "aemter/#{$1}"
+      elsif path =~ /^organizations\/gr\/(.*)/
+        path = "gremien/#{$1}"
+      elsif path =~ /^papers\/ag\/(.*)/
+        path = "anfragen/#{$1}"
+      elsif path =~ /^papers\/vo\/(.*)/
+        path = "vorlagen/#{$1}"
+      end
+
       puts "[#{path}] #{item.name || item.role}"
       item.save_to "data/#{path}.json"
     else
