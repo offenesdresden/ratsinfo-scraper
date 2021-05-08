@@ -19,16 +19,18 @@ Dir.foreach(DIR) do |json_name|
 
     pdf_url = json['downloadUrl'].sub(/^http:/, "https:")
     puts "GET " + pdf_url
-    open pdf_url do |res|
-      code = res.status[0]
-      raise "HTTP #{code}" if code != "200"
+    begin
+      open pdf_url do |res|
+        code = res.status[0]
+        raise "HTTP #{code}" if code != "200"
 
-      IO.copy_stream res, "#{pdf_path}.tmp"
-      FileUtils.mv "#{pdf_path}.tmp", pdf_path
+        IO.copy_stream res, "#{pdf_path}.tmp"
+        FileUtils.mv "#{pdf_path}.tmp", pdf_path
+      end
+    rescue OpenURI::HTTPError => e
+      puts e
     end
   else
     puts "Unrecognized MIME type: #{json['mimeType']}"
   end
-rescue OpenURI::HTTPError => e
-  puts e.message || e
 end
