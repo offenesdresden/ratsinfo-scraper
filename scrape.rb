@@ -20,7 +20,7 @@ end
 # HTTP/JSON helper
 module Scrape
   def self.fetch url
-    URI::open url do |res|
+    open url do |res|
       code = res.status[0]
       raise "HTTP #{code}" if code != "200"
 
