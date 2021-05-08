@@ -23,7 +23,8 @@ Dir.foreach(DIR) do |json_name|
       code = res.status[0]
       raise "HTTP #{code}" if code != "200"
 
-      FileUtils.cp res.path, pdf_path
+      IO.copy_stream res, "#{pdf_path}.tmp"
+      FileUtils.mv "#{pdf_path}.tmp", pdf_path
     end
   else
     puts "Unrecognized MIME type: #{json['mimeType']}"
