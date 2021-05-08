@@ -11,10 +11,12 @@ Dir.foreach(DIR) do |json_name|
   next unless json_name =~ /\.json$/
 
   json_path = "#{DIR}/#{json_name}"
-  pdf_path = json_path.sub(/\.json$/, ".pdf")
   json = JSON.load File.open(json_path)
 
   if json['mimeType'] == "application/pdf"
+    pdf_path = json_path.sub(/\.json$/, ".pdf")
+    next if File.exist? pdf_path
+
     pdf_url = json['downloadUrl']
     puts "GET " + pdf_url
     open pdf_url do |res|
