@@ -4,7 +4,6 @@ require 'open-uri'
 require 'json'
 require 'fileutils'
 require 'socket'
-require './dresden_dns_hack'
 
 DIR = "data/files"
 Dir.foreach(DIR) do |json_name|

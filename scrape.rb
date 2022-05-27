@@ -4,7 +4,6 @@ require 'open-uri'
 require 'json'
 require 'socket'
 require 'fileutils'
-require './dresden_dns_hack'
 
 
 # HTTP/JSON helper
