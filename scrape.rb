@@ -11,7 +11,7 @@ module Scrape
   def self.fetch url
     url.sub! /^http:/, "https:"
 
-    open url do |res|
+    URI.parse(url).open do |res|
       code = res.status[0]
       raise "HTTP #{code}" if code != "200"
 
