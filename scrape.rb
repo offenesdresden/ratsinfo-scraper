@@ -146,6 +146,7 @@ module OParl
   class File < OparlResource; end
 end
 
+seen = {}
 OParl::Body.collect do |body|
   body.all_collections do |item|
 
@@ -165,7 +166,10 @@ OParl::Body.collect do |body|
       end
 
       puts "[#{path}] #{item.name || item.role}"
-      item.save_to "data/#{path}.json"
+      unless seen.has_key? path
+        seen[path] = true
+        item.save_to "data/#{path}.json"
+      end
     else
       puts "Unexpected id: #{item.id.inspect}"
     end
