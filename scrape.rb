@@ -11,11 +11,24 @@ module Scrape
   def self.fetch url
     url.sub! /^http:/, "https:"
 
-    URI.parse(url).open do |res|
-      code = res.status[0]
-      raise "HTTP #{code}" if code != "200"
+    tries = 0
+    begin
+      puts "GET #{url}"
+      URI.parse(url).open do |res|
+        code = res.status[0]
+        raise "HTTP #{code}" if code != "200"
 
-      JSON::parse res.read
+        JSON::parse res.read
+      end
+    rescue
+      p $!
+      if tries < 5
+        tries += 1
+        retry
+      else
+        puts "Giving up after #{tries} tries"
+        raise
+      end
     end
   end
 
