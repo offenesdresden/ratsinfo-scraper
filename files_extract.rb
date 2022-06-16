@@ -18,10 +18,11 @@ Dir.foreach(DIR) do |json_name|
     next if File.exist? txt_path
 
     unless File.exist? pdf_path
-      pdf_url = json['downloadUrl'].sub(/^http:/, "https:")
-      puts "GET " + pdf_url
+      pdf_url = URI::parse json['downloadUrl'].sub(/^http:/, "https:")
+      puts "GET #{pdf_url}"
+      tries = 0
       begin
-        open pdf_url do |res|
+        pdf_url.open do |res|
           code = res.status[0]
           raise "HTTP #{code}" if code != "200"
 
@@ -31,6 +32,13 @@ Dir.foreach(DIR) do |json_name|
       rescue OpenURI::HTTPError => e
         puts e
         next
+      rescue
+        tries += 1
+        if tries < 5
+          retry
+        else
+          raise
+        end
       end
     end
     print `pdftotext -enc UTF-8 #{pdf_path} && rm #{pdf_path}`
