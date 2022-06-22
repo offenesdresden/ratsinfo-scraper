@@ -29,16 +29,9 @@ Dir.foreach(DIR) do |json_name|
           IO.copy_stream res, "#{pdf_path}.tmp"
           FileUtils.mv "#{pdf_path}.tmp", pdf_path
         end
-      rescue OpenURI::HTTPError => e
-        puts e
-        next
       rescue
-        tries += 1
-        if tries < 5
-          retry
-        else
-          raise
-        end
+        p $!
+        next
       end
     end
     print `pdftotext -enc UTF-8 #{pdf_path} && rm #{pdf_path}`
