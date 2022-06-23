@@ -5,7 +5,7 @@ require 'json'
 require 'erb'
 
 class Meeting
-  attr_accessor :id, :start, :end, :name, :location, :description
+  attr_accessor :id, :start, :end, :name, :location, :description, :url
 end
 
 def fmt_time t
@@ -27,11 +27,15 @@ Dir::foreach(path) do |filename|
   m.start = fmt_time Time::parse(json["start"])
   m.end = fmt_time(json["end"] ? Time::parse(json["end"]) : (Time::parse(json["start"]) + 7200))
   m.name = json["name"].gsub(/[\r\n]/, " ")
-  m.location = json["locality"] ? (json["locality"] || "").gsub(/[\r\n]/, " ") : nil
+  m.location = %w(description room locality).collect { |key|
+    value = (json['location'][key] || "").gsub(/[\r\n]/, " ")
+    value == "" ? nil : value
+  }.compact.join(", ")
   m.description = json["agendaItem"] ? json["agendaItem"].collect { |a|
     title = a["name"].gsub(/[\r\n]/, " ")
     "* #{a["number"]} #{title}"
   }.join("\\n") : nil
+  m.url = "https://ratsinfo.dresden.de/si0050.asp?smcred=20&__ksinr=#{json['id'].split('/').last}"
   meetings.push m
 end
 
@@ -47,6 +51,7 @@ ical = ERB::new <<~EOF
   METHOD:PUBLISH
   CLASS:PUBLIC
   UID:meeting-<%= m.id %>@ratsinfo.dresden.de
+  URL:<%= m.url %>
   DTSTART:<%= m.start %>
   DTEND:<%= m.end %>
   SUMMARY:<%= m.name %>
