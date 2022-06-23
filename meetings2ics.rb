@@ -55,12 +55,8 @@ ical = ERB::new <<~EOF
   DTSTART:<%= m.start %>
   DTEND:<%= m.end %>
   SUMMARY:<%= m.name %>
-  <% if m.location %>
-  LOCATION:<%= m.location %>
-  <% end %>
-  <% if m.description %>
-  DESCRIPTION:Tagesordnung:\\n<%= m.description %>
-  <% end %>
+  <% if m.location %>LOCATION:<%= m.location %><% end %>
+  <% if m.description %>DESCRIPTION:Tagesordnung:\\n<%= m.description %><% end %>
   END:VEVENT
   <% end %>
   END:VCALENDAR
