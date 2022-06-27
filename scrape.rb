@@ -14,6 +14,7 @@ module Scrape
     tries = 0
     begin
       puts "GET #{url}"
+      STDOUT.flush
       URI.parse(url).open do |res|
         code = res.status[0]
         raise "HTTP #{code}" if code != "200"
@@ -26,7 +27,7 @@ module Scrape
         tries += 1
         retry
       else
-        puts "Giving up after #{tries} tries"
+        STDERR.puts "Giving up after #{tries} tries"
         raise
       end
     end
@@ -128,7 +129,7 @@ module OParl
         begin
           send type.intern, &block
         rescue OpenURI::HTTPError => e
-          puts "#{type}: #{e.message || e}"
+          STDERR.puts "#{type}: #{e.message || e}"
         end
       end
     end
@@ -149,7 +150,6 @@ end
 seen = {}
 OParl::Body.collect do |body|
   body.all_collections do |item|
-
     if item.id =~ /^http:\/\/oparl\.dresden\.de\/bodies\/0001\/(.+)/
       path = $1
       # retain legacy hierarchy
@@ -165,14 +165,12 @@ OParl::Body.collect do |body|
         path = "vorlagen/#{$1}"
       end
 
-      puts "[#{path}] #{item.name || item.role}"
       unless seen.has_key? path
         seen[path] = true
         item.save_to "data/#{path}.json"
       end
     else
-      puts "Unexpected id: #{item.id.inspect}"
+      STDERR.puts "Unexpected id: #{item.id.inspect}"
     end
-    STDOUT.flush
   end
 end

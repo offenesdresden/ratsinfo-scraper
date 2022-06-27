@@ -20,6 +20,7 @@ Dir.foreach(DIR) do |json_name|
     unless File.exist? pdf_path
       pdf_url = URI::parse json['downloadUrl'].sub(/^http:/, "https:")
       puts "GET #{pdf_url}"
+      STDOUT.flush
       tries = 0
       begin
         pdf_url.open do |res|
@@ -36,6 +37,6 @@ Dir.foreach(DIR) do |json_name|
     end
     print `pdftotext -enc UTF-8 #{pdf_path} && rm #{pdf_path}`
   else
-    puts "Unrecognized MIME type: #{json['mimeType']}"
+    STDERR.puts "Unrecognized MIME type: #{json['mimeType']}"
   end
 end
