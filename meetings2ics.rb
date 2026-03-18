@@ -17,8 +17,8 @@ Dir::foreach(path) do |filename|
 
   json = JSON::load File::open("#{path}/#{filename}")
 
-  now = Time::new
-  next unless Time::parse(json["start"]) >= now && Time::parse(json["end"] || json["start"]) >= now
+  yesterday = Time::new - 86400
+  next unless Time::parse(json["start"]) >= yesterday && Time::parse(json["end"] || json["start"]) >= yesterday
 
   m = Meeting::new
   m.id = json["id"]
