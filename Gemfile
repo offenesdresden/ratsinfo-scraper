@@ -8,7 +8,7 @@ group :test do
 end
 
 gem "rubyzip", "~> 1.1"
-gem "mechanize", "~> 2.7"
+gem "mechanize", "~> 2.8"
 gem "hashie", "~> 2.0"
 gem "mini_magick"
 gem "minitest"
