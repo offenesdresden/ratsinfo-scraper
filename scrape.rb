@@ -182,6 +182,8 @@ module OParl
                        :no
                      when /Enthalt/i
                        :neutral
+                     when /Befang/i
+                       :recused
                      else
                        nil
                      end
