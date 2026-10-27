@@ -162,10 +162,10 @@ module OParl
         agendaItem = @data["agendaItem"].find { |agendaItem|
           agendaItem["number"] == number
         }
-        # unless agendaItem
-        #   STDERR.puts "Found no OParl agendaItem for #{number.inspect} (#{badge.text.inspect})"
-        #   next
-        # end
+        unless agendaItem
+          # STDERR.puts "Found no OParl agendaItem for #{number.inspect} (#{badge.text.inspect})"
+          next
+        end
 
         # Add resolution
         if (result_el = row.css('.smc_field_smcdv0_box2_beschluss')[0])
