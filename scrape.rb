@@ -4,7 +4,7 @@ require 'open-uri'
 require 'json'
 require 'socket'
 require 'fileutils'
-
+require 'nokogiri'
 
 # HTTP/JSON helper
 module Scrape
@@ -137,7 +137,63 @@ module OParl
 
   class Organization < OparlResource; end
   class Person < OparlResource; end
-  class Meeting < OparlResource; end
+  class Meeting < OparlResource
+    def initialize url: nil, data: nil
+      super url: url, data: data
+
+      # Scan Website for vote results.
+      id = @data['id'].split("/").last
+      html_url = "https://ratsinfo.dresden.de/si0056.asp?__ksinr=#{id}"
+      STDERR.puts "GET HTML #{html_url}"
+      doc = begin
+              Nokogiri::HTML URI::open(html_url)
+            rescue RuntimeError => e
+              STDERR.puts "HTTP error: #{e}"
+              return
+            end
+      vote_count = 0
+      doc.css(".card").each do |row|
+        badge = row.css('h3 .badge')[0]
+        next unless badge
+        next unless badge.text =~ /([0-9\.]+)/
+        number = $1
+
+        # Find associated OParl agendaItem
+        agendaItem = @data["agendaItem"].find { |agendaItem|
+          agendaItem["number"] == number
+        }
+        # unless agendaItem
+        #   STDERR.puts "Found no OParl agendaItem for #{number.inspect} (#{badge.text.inspect})"
+        #   next
+        # end
+
+        # Add resolution
+        if (result_el = row.css('.smc_field_smcdv0_box2_beschluss')[0])
+          agendaItem["result"] ||= result_el.text.sub(/^.+?:\s+/, "")
+        end
+        # Add vote counts
+        if (vote_el = row.css('.smc_field_smcdv0_box2_abstimmung')[0])
+          vote = {}
+          vote_el.text.sub(/^.+?:\s+/, "").scan(/(\w+):\W*(\d+)/).each do |choice, count|
+            choice = case choice
+                     when /Ja/i
+                       :yes
+                     when /Nein/i
+                       :no
+                     when /Enthalt/i
+                       :neutral
+                     else
+                       nil
+                     end
+            vote[choice] = count.to_i if choice
+          end
+          agendaItem["vote"] ||= vote
+          vote_count += 1
+        end
+      end
+      STDERR.puts "Collected #{vote_count} votes" if vote_count > 0
+    end
+  end
   class Paper < OparlResource; end
   class Membership < OparlResource; end
   class Location < OparlResource; end

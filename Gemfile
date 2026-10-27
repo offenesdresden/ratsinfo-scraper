@@ -1,4 +1,4 @@
 source "https://rubygems.org"
 
-gem "bundler"
-
+gem "open4"
+gem "nokogiri"
